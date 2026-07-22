@@ -1,0 +1,11 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: streamhub-postgres
+    environment:
+      POSTGRES_DB: streamhub
+      POSTGRES_USER: denny
+      POSTGRES_PASSWORD: password
+      TZ: Asia/Kolkata
+    ports:
+      - "5432:5432"
