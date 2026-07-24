@@ -1,5 +1,7 @@
 package com.dennymathew.streamhub.user;
 
+import com.dennymathew.streamhub.user.dto.RegisterUserRequest;
+import com.dennymathew.streamhub.user.dto.UserResponse;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,7 +18,7 @@ public class UserController {
         return userService.sayHello();
     }
     @PostMapping
-    public User createUser(@RequestBody User user) {
+    public UserResponse createUser(@RequestBody RegisterUserRequest user) {
         return userService.createUser(user);
     }
 
