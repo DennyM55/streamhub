@@ -2,6 +2,7 @@ package com.dennymathew.streamhub.user;
 
 import com.dennymathew.streamhub.user.dto.RegisterUserRequest;
 import com.dennymathew.streamhub.user.dto.UserResponse;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,7 +19,7 @@ public class UserController {
         return userService.sayHello();
     }
     @PostMapping
-    public UserResponse createUser(@RequestBody RegisterUserRequest user) {
+    public UserResponse createUser(@Valid @RequestBody RegisterUserRequest user) {
         return userService.createUser(user);
     }
 
