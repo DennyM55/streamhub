@@ -15,4 +15,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest()
                 .body("Validation failed");
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgument(
+            IllegalArgumentException ex) {
+
+        return ResponseEntity.badRequest()
+                .body(ex.getMessage());
+    }
 }

@@ -1,9 +1,13 @@
 package com.dennymathew.streamhub.user.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 public record RegisterUserRequest(
         @NotBlank(message = "Name is required")
-        String name
+        String name,
+        @NotBlank(message = "Email is required")
+        @Email(message = "Email must be valid")
+        String email
 ) {
 }

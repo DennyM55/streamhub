@@ -19,14 +19,20 @@ class UserService {
 
     public UserResponse createUser(RegisterUserRequest request) {
 
+        if (userRepository.existsByEmail(request.email())) {
+            throw new IllegalArgumentException("Email already registered");
+        }
+
         User user = new User();
         user.setName(request.name());
+        user.setEmail(request.email());
 
         User savedUser = userRepository.save(user);
 
         return new UserResponse(
                 savedUser.getId(),
-                savedUser.getName()
+                savedUser.getName(),
+                savedUser.getEmail()
         );
     }
 }
