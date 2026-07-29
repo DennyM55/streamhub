@@ -1,4 +1,6 @@
 package com.dennymathew.streamhub.common.exception;
 
-public class ApiError {
-}
+public record ApiError(
+        int status,
+        String message
+) {}
