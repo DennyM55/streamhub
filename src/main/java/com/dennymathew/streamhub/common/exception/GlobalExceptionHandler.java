@@ -9,18 +9,22 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<String> handleValidation(
+    public ResponseEntity<ApiError> handleValidation(
             MethodArgumentNotValidException ex) {
 
+        String message = ex.getBindingResult()
+                .getFieldError()
+                .getDefaultMessage();
+
         return ResponseEntity.badRequest()
-                .body("Validation failed");
+                .body(new ApiError(400, message));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgument(
+    public ResponseEntity<ApiError> handleIllegalArgument(
             IllegalArgumentException ex) {
 
         return ResponseEntity.badRequest()
-                .body(ex.getMessage());
+                .body(new ApiError(400, ex.getMessage()));
     }
 }
