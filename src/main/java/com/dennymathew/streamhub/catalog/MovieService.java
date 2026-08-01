@@ -3,6 +3,9 @@ package com.dennymathew.streamhub.catalog;
 import com.dennymathew.streamhub.catalog.dto.CreateMovieRequest;
 import com.dennymathew.streamhub.catalog.dto.MovieResponse;
 import com.dennymathew.streamhub.catalog.dto.UpdateMovieRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,12 +34,7 @@ public class MovieService {
         return movieRepository.save(movie);
     }
 
-    public List<MovieResponse> getAllMovies() {
-        return movieRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
+
     private MovieResponse toResponse(Movie movie) {
         return new MovieResponse(
                 movie.getId(),
@@ -56,6 +54,7 @@ public class MovieService {
 
         return toResponse(movie);
     }
+
     public MovieResponse updateMovie(Long id, UpdateMovieRequest request) {
 
         Movie movie = movieRepository.findById(id)
@@ -78,4 +77,43 @@ public class MovieService {
 
         movieRepository.delete(movie);
     }
+
+    public Page<MovieResponse> getMovies(
+            String search,
+            String genre,
+            Integer releaseYear,
+            Integer durationMinutes,
+            Pageable pageable) {
+
+        Page<Movie> movies;
+
+        Specification<Movie> specification = Specification.allOf();
+
+        if (search != null && !search.isBlank()) {
+            specification = specification.and(
+                    MovieSpecification.titleContains(search)
+            );
+        }
+
+        if (genre != null && !genre.isBlank()) {
+            specification = specification.and(
+                    MovieSpecification.genreEquals(genre)
+            );
+        }
+        if (releaseYear != null) {
+            specification = specification.and(
+                    MovieSpecification.releaseYearEquals(releaseYear)
+            );
+        }
+        if (durationMinutes != null) {
+            specification = specification.and(
+                    MovieSpecification.durationLessThanOrEqual(durationMinutes)
+            );
+        }
+
+        return movieRepository.findAll(specification, pageable)
+                .map(this::toResponse);
+
+    }
+
 }
