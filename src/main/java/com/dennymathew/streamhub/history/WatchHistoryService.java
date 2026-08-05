@@ -58,8 +58,8 @@ public class WatchHistoryService {
                 savedHistory.getLastWatchedAt()
         );
     }
-    public List<WatchHistoryResponse> getHistory(Long userId) {
-        return watchHistoryRepository.findByUserId(userId)
+    public List<WatchHistoryResponse> findByUserIdOrderByLastWatchedAtDesc(Long userId) {
+        return watchHistoryRepository.findByUserIdOrderByLastWatchedAtDesc(userId)
                 .stream()
                 .map(history -> new WatchHistoryResponse(
                         history.getId(),

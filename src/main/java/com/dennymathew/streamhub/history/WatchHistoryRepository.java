@@ -12,5 +12,6 @@ public interface WatchHistoryRepository
             Long userId,
             Long movieId
     );
-    List<WatchHistory> findByUserId(Long userId);
+
+    List<WatchHistory> findByUserIdOrderByLastWatchedAtDesc(Long userId);
 }
