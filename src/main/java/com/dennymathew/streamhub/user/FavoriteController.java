@@ -2,12 +2,13 @@ package com.dennymathew.streamhub.user;
 
 import com.dennymathew.streamhub.user.dto.FavoriteResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/users/{userId}/favorites")
+@RequestMapping("/favorites")
 public class FavoriteController {
 
     private final FavoriteService favoriteService;
@@ -18,23 +19,29 @@ public class FavoriteController {
 
     @PostMapping("/{movieId}")
     public FavoriteResponse addFavorite(
-            @PathVariable Long userId,
-            @PathVariable Long movieId) {
+            @PathVariable Long movieId,
+            Authentication authentication) {
 
-        return favoriteService.addFavorite(userId, movieId);
+        return favoriteService.addFavoriteByEmail(
+                authentication.getName(),
+                movieId
+        );
     }
 
     @GetMapping
-    public List<FavoriteResponse> getFavorites(@PathVariable Long userId) {
-        return favoriteService.getFavorites(userId);
+    public List<FavoriteResponse> getFavorites(Authentication authentication) {
+        return favoriteService.getFavoritesByEmail(authentication.getName());
     }
 
     @DeleteMapping("/{movieId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeFavorite(
-            @PathVariable Long userId,
-            @PathVariable Long movieId) {
+            @PathVariable Long movieId,
+            Authentication authentication) {
 
-        favoriteService.removeFavorite(userId, movieId);
+        favoriteService.removeFavoriteByEmail(
+                authentication.getName(),
+                movieId
+        );
     }
 }

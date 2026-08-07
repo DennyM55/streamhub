@@ -24,14 +24,16 @@ public class FavoriteService {
         this.movieRepository = movieRepository;
     }
 
-    public FavoriteResponse addFavorite(Long userId, Long movieId) {
+    public FavoriteResponse addFavoriteByEmail(String email, Long movieId) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Long userId = user.getId();
 
         if (favoriteRepository.existsByUserIdAndMovieId(userId, movieId)) {
             throw new IllegalArgumentException("Movie already in favorites");
         }
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new IllegalArgumentException("Movie not found"));
@@ -50,8 +52,12 @@ public class FavoriteService {
         );
     }
 
-    public List<FavoriteResponse> getFavorites(Long userId) {
-        return favoriteRepository.findByUserId(userId)
+    public List<FavoriteResponse> getFavoritesByEmail(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return favoriteRepository.findByUserId(user.getId())
                 .stream()
                 .map(favorite -> new FavoriteResponse(
                         favorite.getId(),
@@ -63,7 +69,12 @@ public class FavoriteService {
     }
 
     @Transactional
-    public void removeFavorite(Long userId, Long movieId) {
+    public void removeFavoriteByEmail(String email, Long movieId) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Long userId = user.getId();
 
         if (!favoriteRepository.existsByUserIdAndMovieId(userId, movieId)) {
             throw new IllegalArgumentException("Favorite not found");

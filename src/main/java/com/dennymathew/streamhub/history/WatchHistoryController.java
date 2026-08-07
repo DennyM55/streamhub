@@ -2,6 +2,7 @@ package com.dennymathew.streamhub.history;
 
 import com.dennymathew.streamhub.history.dto.UpdateProgressRequest;
 import com.dennymathew.streamhub.history.dto.WatchHistoryResponse;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,8 +29,10 @@ public class WatchHistoryController {
                 request.progressSeconds()
         );
     }
+
     @GetMapping
-    public List<WatchHistoryResponse> getHistory(@PathVariable Long userId) {
-        return watchHistoryService.getHistory(userId);
+    public List<WatchHistoryResponse> getHistory(Authentication authentication) {
+        String email = authentication.getName();
+        return watchHistoryService.getHistoryByEmail(email);
     }
 }

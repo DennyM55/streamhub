@@ -71,4 +71,23 @@ public class WatchHistoryService {
                 ))
                 .toList();
     }
+
+    public List<WatchHistoryResponse> getHistoryByEmail(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return watchHistoryRepository
+                .findByUserIdOrderByLastWatchedAtDesc(user.getId())
+                .stream()
+                .map(history -> new WatchHistoryResponse(
+                        history.getId(),
+                        history.getUser().getId(),
+                        history.getMovie().getId(),
+                        history.getMovie().getTitle(),
+                        history.getProgressSeconds(),
+                        history.getLastWatchedAt()
+                ))
+                .toList();
+    }
 }
