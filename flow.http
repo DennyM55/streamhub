@@ -19,3 +19,6 @@ GET http://localhost:8080/movies
 ###
 GET http://localhost:8080/movies
 Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDUzOTc5LCJleHAiOjE3ODY0NTc1Nzl9.x0Nzm5xA9fPAkw3se2pfhyz9xkWK-M9gD4XTRKXJcPfzOgOQ2U481eKIp09tMD88
+###
+GET http://localhost:8080/movies
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU1NTk5LCJleHAiOjE3ODY0NTkxOTl9.p4OLS908fEtNtZU4j4Ot6qvaHo_FGarHmYaAb-RlxRHN4_788Uo2ftK0krzAczBF

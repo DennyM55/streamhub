@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.NullSecurityContextRepository;
+import org.springframework.security.web.savedrequest.NullRequestCache;
 
 @Configuration
 public class SecurityConfig {
@@ -31,6 +32,9 @@ public class SecurityConfig {
                 )
                 .securityContext(security -> security
                         .securityContextRepository(new NullSecurityContextRepository())
+                )
+                .requestCache(cache -> cache
+                        .requestCache(new NullRequestCache())
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
