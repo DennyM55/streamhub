@@ -29,6 +29,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        .sessionFixation(sessionFixation -> sessionFixation.none())
                 )
                 .securityContext(security -> security
                         .securityContextRepository(new NullSecurityContextRepository())
