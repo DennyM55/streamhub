@@ -58,6 +58,7 @@ public class WatchHistoryService {
                 savedHistory.getLastWatchedAt()
         );
     }
+
     public List<WatchHistoryResponse> getHistory(Long userId) {
         return watchHistoryRepository.findByUserIdOrderByLastWatchedAtDesc(userId)
                 .stream()
@@ -90,4 +91,21 @@ public class WatchHistoryService {
                 ))
                 .toList();
     }
+
+    public WatchHistoryResponse saveProgressByEmail(
+            String email,
+            Long movieId,
+            Integer progressSeconds) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("User not found"));
+
+        return saveProgress(
+                user.getId(),
+                movieId,
+                progressSeconds
+        );
+    }
+
 }

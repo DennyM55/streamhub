@@ -1,24 +1,103 @@
+###API TEST 1 — Register a fresh user
 POST http://localhost:8080/users
 Content-Type: application/json
 
 {
-  "name": "Denny",
-  "email": "denny.jwt2@example.com",
+  "name": "Denny Test",
+  "email": "denny.jwt3@example.com",
   "password": "secret123"
 }
-###
+
+###API TEST 2 — Login
 POST http://localhost:8080/users/login
 Content-Type: application/json
 
 {
-  "email": "denny.jwt2@example.com",
+  "email": "denny.jwt3@example.com",
   "password": "secret123"
 }
-###
+
+###API TEST 3 — Protected API WITHOUT JWT
 GET http://localhost:8080/movies
-###
+
+###API TEST 4 — Same API WITH JWT
 GET http://localhost:8080/movies
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDUzOTc5LCJleHAiOjE3ODY0NTc1Nzl9.x0Nzm5xA9fPAkw3se2pfhyz9xkWK-M9gD4XTRKXJcPfzOgOQ2U481eKIp09tMD88
-###
-GET http://localhost:8080/movies
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU1NTk5LCJleHAiOjE3ODY0NTkxOTl9.p4OLS908fEtNtZU4j4Ot6qvaHo_FGarHmYaAb-RlxRHN4_788Uo2ftK0krzAczBF
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU2NzE1LCJleHAiOjE3ODY0NjAzMTV9.QW97VD_CuG9mYEmCsTb7FdbNJ8hEtnfc-sRkKLLxJQkBMTo9dWFXhKdzWe3HEY8u
+
+###API TEST 5 — create a fresh movie.
+POST http://localhost:8080/movies
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU2NzE1LCJleHAiOjE3ODY0NjAzMTV9.QW97VD_CuG9mYEmCsTb7FdbNJ8hEtnfc-sRkKLLxJQkBMTo9dWFXhKdzWe3HEY8u
+Content-Type: application/json
+
+###API TEST 6 — Search + Filter
+GET http://localhost:8080/movies?search=matrix&genre=Sci-Fi&page=0&size=5&sort=releaseYear,desc
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU2NzE1LCJleHAiOjE3ODY0NjAzMTV9.QW97VD_CuG9mYEmCsTb7FdbNJ8hEtnfc-sRkKLLxJQkBMTo9dWFXhKdzWe3HEY8u
+
+{
+  "title": "The Matrix",
+  "description": "A hacker discovers the world he knows is a simulated reality.",
+  "genre": "Sci-Fi",
+  "releaseYear": 1999,
+  "durationMinutes": 136,
+  "thumbnailUrl": "https://example.com/matrix.jpg",
+  "mediaUrl": "https://example.com/matrix.mp4"
+}
+###API TEST 7 — Add Matrix to Favorites
+POST http://localhost:8080/favorites/6
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU2NzE1LCJleHAiOjE3ODY0NjAzMTV9.QW97VD_CuG9mYEmCsTb7FdbNJ8hEtnfc-sRkKLLxJQkBMTo9dWFXhKdzWe3HEY8u
+
+###API TEST 8 — Get MY Favorites
+GET http://localhost:8080/favorites
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU2NzE1LCJleHAiOjE3ODY0NjAzMTV9.QW97VD_CuG9mYEmCsTb7FdbNJ8hEtnfc-sRkKLLxJQkBMTo9dWFXhKdzWe3HEY8u
+
+###API TEST 9 — Duplicate Favorite Protection
+POST http://localhost:8080/favorites/6
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU2NzE1LCJleHAiOjE3ODY0NjAzMTV9.QW97VD_CuG9mYEmCsTb7FdbNJ8hEtnfc-sRkKLLxJQkBMTo9dWFXhKdzWe3HEY8u
+
+###API TEST 10 — Remove Matrix from Favorites
+DELETE http://localhost:8080/favorites/6
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU2NzE1LCJleHAiOjE3ODY0NjAzMTV9.QW97VD_CuG9mYEmCsTb7FdbNJ8hEtnfc-sRkKLLxJQkBMTo9dWFXhKdzWe3HEY8u
+
+###API TEST 11 — Verify deletion
+GET http://localhost:8080/favorites
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU2NzE1LCJleHAiOjE3ODY0NjAzMTV9.QW97VD_CuG9mYEmCsTb7FdbNJ8hEtnfc-sRkKLLxJQkBMTo9dWFXhKdzWe3HEY8u
+
+###API TEST 12 — Save playback progress
+PUT http://localhost:8080/users/11/history/6
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU2NzE1LCJleHAiOjE3ODY0NjAzMTV9.QW97VD_CuG9mYEmCsTb7FdbNJ8hEtnfc-sRkKLLxJQkBMTo9dWFXhKdzWe3HEY8u
+Content-Type: application/json
+
+{
+  "progressSeconds": 1800
+}
+
+###API TEST 13 — Try to write history for another user
+PUT http://localhost:8080/users/10/history/6
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU2NzE1LCJleHAiOjE3ODY0NjAzMTV9.QW97VD_CuG9mYEmCsTb7FdbNJ8hEtnfc-sRkKLLxJQkBMTo9dWFXhKdzWe3HEY8u
+Content-Type: application/json
+
+{
+  "progressSeconds": 999
+}
+
+###API TEST 14 — Test the fixed Watch History write
+PUT http://localhost:8080/history/6
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU2NzE1LCJleHAiOjE3ODY0NjAzMTV9.QW97VD_CuG9mYEmCsTb7FdbNJ8hEtnfc-sRkKLLxJQkBMTo9dWFXhKdzWe3HEY8u
+Content-Type: application/json
+
+{
+  "progressSeconds": 2222
+}
+
+###API TEST 15 — Get MY Watch History
+GET http://localhost:8080/history
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU2NzE1LCJleHAiOjE3ODY0NjAzMTV9.QW97VD_CuG9mYEmCsTb7FdbNJ8hEtnfc-sRkKLLxJQkBMTo9dWFXhKdzWe3HEY8u
+
+###API TEST 16 — Verify old insecure endpoint is gone
+PUT http://localhost:8080/users/10/history/6
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU2NzE1LCJleHAiOjE3ODY0NjAzMTV9.QW97VD_CuG9mYEmCsTb7FdbNJ8hEtnfc-sRkKLLxJQkBMTo9dWFXhKdzWe3HEY8u
+Content-Type: application/json
+
+{
+  "progressSeconds": 999
+}
