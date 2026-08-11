@@ -20,6 +20,7 @@ Content-Type: application/json
 ###API TEST 3 — Protected API WITHOUT JWT
 GET http://localhost:8080/movies
 
+
 ###API TEST 4 — Same API WITH JWT
 GET http://localhost:8080/movies
 Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU2NzE1LCJleHAiOjE3ODY0NjAzMTV9.QW97VD_CuG9mYEmCsTb7FdbNJ8hEtnfc-sRkKLLxJQkBMTo9dWFXhKdzWe3HEY8u
@@ -42,6 +43,7 @@ Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY
   "thumbnailUrl": "https://example.com/matrix.jpg",
   "mediaUrl": "https://example.com/matrix.mp4"
 }
+
 ###API TEST 7 — Add Matrix to Favorites
 POST http://localhost:8080/favorites/6
 Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJkZW5ueS5qd3QzQGV4YW1wbGUuY29tIiwiaWF0IjoxNzg2NDU2NzE1LCJleHAiOjE3ODY0NjAzMTV9.QW97VD_CuG9mYEmCsTb7FdbNJ8hEtnfc-sRkKLLxJQkBMTo9dWFXhKdzWe3HEY8u
@@ -101,3 +103,10 @@ Content-Type: application/json
 {
   "progressSeconds": 999
 }
+
+### checking 401 authentication required 
+GET http://localhost:8080/movies
+
+### checking 401 invalid or expired token
+GET http://localhost:8080/movies
+Authorization: Bearer abc.def.xyz
