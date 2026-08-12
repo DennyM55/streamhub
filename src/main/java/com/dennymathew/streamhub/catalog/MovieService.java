@@ -3,6 +3,7 @@ package com.dennymathew.streamhub.catalog;
 import com.dennymathew.streamhub.catalog.dto.CreateMovieRequest;
 import com.dennymathew.streamhub.catalog.dto.MovieResponse;
 import com.dennymathew.streamhub.catalog.dto.UpdateMovieRequest;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -47,7 +48,7 @@ public class MovieService {
                 movie.getMediaUrl()
         );
     }
-
+    @Cacheable(value = "movies", key = "#id")
     public MovieResponse getMovieById(Long id) {
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new MovieNotFoundException(id));

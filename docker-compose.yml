@@ -9,3 +9,9 @@ services:
       TZ: Asia/Kolkata
     ports:
       - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: streamhub-redis
+    ports:
+      - "6379:6379"

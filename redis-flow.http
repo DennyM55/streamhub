@@ -1,0 +1,17 @@
+### API TEST 17 — Login for Redis tests
+
+POST http://localhost:8080/users/login
+Content-Type: application/json
+
+{
+  "email": "denny.jwt3@example.com",
+  "password": "secret123"
+}
+
+> {%
+    client.global.set("auth_token", response.body.token);
+%}
+### API TEST 18 — First GET movie by ID (Redis MISS expected)
+
+GET http://localhost:8080/movies/6
+Authorization: Bearer {{auth_token}}
