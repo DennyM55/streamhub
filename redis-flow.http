@@ -15,3 +15,24 @@ Content-Type: application/json
 
 GET http://localhost:8080/movies/6
 Authorization: Bearer {{auth_token}}
+
+### API TEST 20 — Update movie 6 and evict cache
+
+PUT http://localhost:8080/movies/6
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "title": "The Matrix Reloaded Test",
+  "description": "Updated Redis cache test",
+  "genre": "Sci-Fi",
+  "releaseYear": 1999,
+  "durationMinutes": 136,
+  "thumbnailUrl": "https://example.com/matrix-new.jpg",
+  "mediaUrl": "https://example.com/matrix-new.mp4"
+}
+
+### API TEST 21 — GET updated movie and repopulate Redis
+
+GET http://localhost:8080/movies/6
+Authorization: Bearer {{auth_token}}
