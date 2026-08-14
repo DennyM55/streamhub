@@ -13,5 +13,6 @@ services:
   redis:
     image: redis:7-alpine
     container_name: streamhub-redis
+    command: redis-server --maxmemory 20mb --maxmemory-policy allkeys-lru
     ports:
       - "6379:6379"
