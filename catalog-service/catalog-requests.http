@@ -1,9 +1,8 @@
-###
-#GET http://localhost:8081/movies/{{id}}
-GET http://localhost:8081/movies/12
+@baseUrl = http://localhost:8081
+@movieId = 1
 
-### Create a new movie
-POST http://localhost:8081/movies
+### POST valid movie
+POST {{baseUrl}}/movies
 Content-Type: application/json
 
 {
@@ -16,8 +15,8 @@ Content-Type: application/json
   "mediaUrl": "https://example.com/inception.mp4"
 }
 
-### Test bad request
-POST http://localhost:8081/movies
+### POST invalid movie
+POST {{baseUrl}}/movies
 Content-Type: application/json
 
 {
@@ -25,5 +24,36 @@ Content-Type: application/json
   "description": "Bad request test",
   "genre": "",
   "releaseYear": null,
-  "durationMinutes": 0
+  "durationMinutes": 0,
+  "thumbnailUrl": "https://example.com/bad.jpg",
+  "mediaUrl": "https://example.com/bad.mp4"
 }
+
+### GET movie by id
+GET {{baseUrl}}/movies/{{movieId}}
+
+### GET nonexistent movie
+GET {{baseUrl}}/movies/999999
+
+### GET paginated movies
+GET {{baseUrl}}/movies?page=0&size=10&sort=title,asc
+
+### GET search/filter
+GET {{baseUrl}}/movies?search=matrix&genre=Sci-Fi&page=0&size=10&sort=releaseYear,desc
+
+### PUT movie
+PUT {{baseUrl}}/movies/{{movieId}}
+Content-Type: application/json
+
+{
+  "title": "Inception",
+  "description": "A thief enters dreams to steal and plant ideas while questioning reality.",
+  "genre": "Sci-Fi",
+  "releaseYear": 2010,
+  "durationMinutes": 148,
+  "thumbnailUrl": "https://example.com/inception-updated.jpg",
+  "mediaUrl": "https://example.com/inception-updated.mp4"
+}
+
+### DELETE movie
+DELETE {{baseUrl}}/movies/{{movieId}}
