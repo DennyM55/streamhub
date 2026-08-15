@@ -1,6 +1,8 @@
 package com.dennymathew.catalog.movie;
 
+import com.dennymathew.catalog.movie.dto.CreateMovieRequest;
 import com.dennymathew.catalog.movie.dto.MovieResponse;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,5 +18,10 @@ public class MovieController {
     @GetMapping("/{id}")
     public MovieResponse getMovie(@PathVariable Long id) {
         return movieService.getMovie(id);
+    }
+
+    @PostMapping
+    public MovieResponse createMovie(@Valid @RequestBody CreateMovieRequest request) {
+        return movieService.createMovie(request);
     }
 }
