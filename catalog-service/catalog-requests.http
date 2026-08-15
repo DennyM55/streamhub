@@ -1,0 +1,5 @@
+###
+#GET http://localhost:8081/movies/{{id}}
+GET http://localhost:8081/movies/12
+
+<> 2026-08-15T162009.200.json
