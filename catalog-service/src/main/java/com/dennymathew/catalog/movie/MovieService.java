@@ -3,6 +3,8 @@ package com.dennymathew.catalog.movie;
 import com.dennymathew.catalog.movie.dto.CreateMovieRequest;
 import com.dennymathew.catalog.movie.dto.MovieResponse;
 import com.dennymathew.catalog.movie.dto.UpdateMovieRequest;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ public class MovieService {
         this.movieRepository = movieRepository;
     }
 
+    @Cacheable(cacheNames = "movies", key = "#id")
     public MovieResponse getMovie(Long id) {
 
         Movie movie = movieRepository.findById(id)
@@ -61,6 +64,7 @@ public class MovieService {
         return movies.map(this::toMovieResponse);
     }
 
+    @CacheEvict(cacheNames = "movies", key = "#id")
     public MovieResponse updateMovie(Long id, UpdateMovieRequest request) {
 
         Movie movie = movieRepository.findById(id)
@@ -79,6 +83,7 @@ public class MovieService {
         return toMovieResponse(savedMovie);
     }
 
+    @CacheEvict(cacheNames = "movies", key = "#id")
     public void deleteMovie(Long id) {
 
         Movie movie = movieRepository.findById(id)

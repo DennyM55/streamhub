@@ -32,6 +32,9 @@ Content-Type: application/json
 ### GET movie by id
 GET {{baseUrl}}/movies/{{movieId}}
 
+### GET movie id 1 twice to verify Redis cache hit on second request
+GET {{baseUrl}}/movies/1
+
 ### GET nonexistent movie
 GET {{baseUrl}}/movies/999999
 
@@ -57,3 +60,20 @@ Content-Type: application/json
 
 ### DELETE movie
 DELETE {{baseUrl}}/movies/{{movieId}}
+
+###
+GET http://localhost:8081/movies/2
+
+###
+PUT http://localhost:8081/movies/2
+Content-Type: application/json
+
+{
+  "title": "Inception Updated",
+  "description": "A thief enters dreams to steal and plant ideas.",
+  "genre": "Sci-Fi",
+  "releaseYear": 2010,
+  "durationMinutes": 148,
+  "thumbnailUrl": "https://example.com/inception-updated.jpg",
+  "mediaUrl": "https://example.com/inception-updated.mp4"
+}
