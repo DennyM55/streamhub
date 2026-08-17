@@ -16,9 +16,11 @@ import java.util.List;
 public class MovieController {
 
     private final MovieService movieService;
+    private final CatalogClient catalogClient;
 
-    public MovieController(MovieService movieService) {
+    public MovieController(MovieService movieService, CatalogClient catalogClient) {
         this.movieService = movieService;
+        this.catalogClient = catalogClient;
     }
 
     @PostMapping
@@ -54,5 +56,8 @@ public class MovieController {
 
         return movieService.getMovies(search, genre, releaseYear, durationMinutes, pageable);
     }
-
+    @GetMapping("/remote/{id}")
+    public MovieResponse getRemoteMovie(@PathVariable Long id) {
+        return catalogClient.getMovie(id);
+    }
 }

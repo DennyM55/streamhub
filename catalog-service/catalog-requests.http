@@ -77,3 +77,6 @@ Content-Type: application/json
   "thumbnailUrl": "https://example.com/inception-updated.jpg",
   "mediaUrl": "https://example.com/inception-updated.mp4"
 }
+
+###
+GET http://localhost:8081/movies/2

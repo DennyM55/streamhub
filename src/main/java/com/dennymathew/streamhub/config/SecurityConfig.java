@@ -65,6 +65,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/users",
+                                "/movies/remote/**",
                                 "/users/login"
                         ).permitAll()
                         .anyRequest().authenticated()
