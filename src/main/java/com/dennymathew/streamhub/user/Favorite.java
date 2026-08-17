@@ -1,6 +1,5 @@
 package com.dennymathew.streamhub.user;
 
-import com.dennymathew.streamhub.catalog.Movie;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,7 +25,6 @@ public class Favorite {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "movie_id", nullable = false)
-    private Movie movie;
+    @Column(name = "movie_id", nullable = false)
+    private Long movieId;
 }

@@ -1,7 +1,7 @@
 package com.dennymathew.streamhub.user;
 
-import com.dennymathew.streamhub.catalog.Movie;
-import com.dennymathew.streamhub.catalog.MovieRepository;
+import com.dennymathew.streamhub.catalog.CatalogClient;
+import com.dennymathew.streamhub.catalog.dto.MovieResponse;
 import com.dennymathew.streamhub.user.dto.FavoriteResponse;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -13,15 +13,15 @@ public class FavoriteService {
 
     private final FavoriteRepository favoriteRepository;
     private final UserRepository userRepository;
-    private final MovieRepository movieRepository;
+    private final CatalogClient catalogClient;
 
     public FavoriteService(
             FavoriteRepository favoriteRepository,
             UserRepository userRepository,
-            MovieRepository movieRepository) {
+            CatalogClient catalogClient) {
         this.favoriteRepository = favoriteRepository;
         this.userRepository = userRepository;
-        this.movieRepository = movieRepository;
+        this.catalogClient = catalogClient;
     }
 
     public FavoriteResponse addFavoriteByEmail(String email, Long movieId) {
@@ -35,20 +35,19 @@ public class FavoriteService {
             throw new IllegalArgumentException("Movie already in favorites");
         }
 
-        Movie movie = movieRepository.findById(movieId)
-                .orElseThrow(() -> new IllegalArgumentException("Movie not found"));
+        MovieResponse movie = catalogClient.getMovie(movieId);
 
         Favorite favorite = new Favorite();
         favorite.setUser(user);
-        favorite.setMovie(movie);
+        favorite.setMovieId(movieId);
 
         Favorite savedFavorite = favoriteRepository.save(favorite);
 
         return new FavoriteResponse(
                 savedFavorite.getId(),
                 user.getId(),
-                movie.getId(),
-                movie.getTitle()
+                movie.id(),
+                movie.title()
         );
     }
 
@@ -59,13 +58,16 @@ public class FavoriteService {
 
         return favoriteRepository.findByUserId(user.getId())
                 .stream()
-                .map(favorite -> new FavoriteResponse(
-                        favorite.getId(),
-                        favorite.getUser().getId(),
-                        favorite.getMovie().getId(),
-                        favorite.getMovie().getTitle()
-                ))
-                .toList();
+                .map(favorite -> {
+                    MovieResponse movie = catalogClient.getMovie(favorite.getMovieId());
+
+                    return new FavoriteResponse(
+                            favorite.getId(),
+                            favorite.getUser().getId(),
+                            favorite.getMovieId(),
+                            movie.title()
+                    );
+                }).toList();
     }
 
     @Transactional
