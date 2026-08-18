@@ -1,0 +1,40 @@
+@baseUrl = http://localhost:8080
+@movieId = 2
+
+### 0. Register fresh test user
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "Denny Test",
+  "email": "denny.favorite.test@example.com",
+  "password": "secret123"
+}
+### 1. Login — JWT saved automatically
+POST {{baseUrl}}/users/login
+Content-Type: application/json
+
+{
+  "email": "denny.favorite.test@example.com",
+  "password": "secret123"
+}
+
+> {%
+    client.global.set("auth_token", response.body.token);
+%}
+
+### 2. Add movie to favorites
+POST {{baseUrl}}/favorites/{{movieId}}
+Authorization: Bearer {{auth_token}}
+
+### 3. Get favorites — tests our new batch Catalog call
+GET {{baseUrl}}/favorites
+Authorization: Bearer {{auth_token}}
+
+### 4. Remove favorite
+DELETE {{baseUrl}}/favorites/{{movieId}}
+Authorization: Bearer {{auth_token}}
+
+### 5. Verify removal
+GET {{baseUrl}}/favorites
+Authorization: Bearer {{auth_token}}
