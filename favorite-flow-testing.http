@@ -20,21 +20,23 @@ Content-Type: application/json
 }
 
 > {%
+    client.test("login returns a JWT", function () {
+        client.assert(response.status === 200, "Expected login to return HTTP 200");
+        client.assert(response.body.token, "Expected response.body.token to contain a JWT");
+    });
+
     client.global.set("auth_token", response.body.token);
+    client.global.headers.set("Authorization", "Bearer " + response.body.token);
 %}
 
 ### 2. Add movie to favorites
 POST {{baseUrl}}/favorites/{{movieId}}
-Authorization: Bearer {{auth_token}}
 
 ### 3. Get favorites — tests our new batch Catalog call
 GET {{baseUrl}}/favorites
-Authorization: Bearer {{auth_token}}
 
 ### 4. Remove favorite
 DELETE {{baseUrl}}/favorites/{{movieId}}
-Authorization: Bearer {{auth_token}}
 
 ### 5. Verify removal
 GET {{baseUrl}}/favorites
-Authorization: Bearer {{auth_token}}
