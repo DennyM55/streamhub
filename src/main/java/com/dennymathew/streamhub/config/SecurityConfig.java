@@ -65,6 +65,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/users",
+                                "/error",
                                 "/movies/remote/**",
                                 "/users/login"
                         ).permitAll()
