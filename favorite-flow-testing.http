@@ -1,7 +1,7 @@
 @baseUrl = http://localhost:8080
 @movieId = 2
 
-### 0. Register fresh test user
+### 0. Register user — only needed once
 POST {{baseUrl}}/users
 Content-Type: application/json
 
@@ -10,7 +10,8 @@ Content-Type: application/json
   "email": "denny.favorite.test@example.com",
   "password": "secret123"
 }
-### 1. Login — JWT saved automatically
+
+### 1. Login — RUN THIS FIRST
 POST {{baseUrl}}/users/login
 Content-Type: application/json
 
@@ -21,22 +22,31 @@ Content-Type: application/json
 
 > {%
     client.test("login returns a JWT", function () {
-        client.assert(response.status === 200, "Expected login to return HTTP 200");
-        client.assert(response.body.token, "Expected response.body.token to contain a JWT");
+        client.assert(response.status === 200, "Expected HTTP 200");
+        client.assert(response.body.token, "JWT missing");
     });
 
     client.global.set("auth_token", response.body.token);
-    client.global.headers.set("Authorization", "Bearer " + response.body.token);
 %}
 
-### 2. Add movie to favorites
+### 2. Add favorite
 POST {{baseUrl}}/favorites/{{movieId}}
+Authorization: Bearer {{auth_token}}
 
-### 3. Get favorites — tests our new batch Catalog call
+### 3. Get favorites
 GET {{baseUrl}}/favorites
+Authorization: Bearer {{auth_token}}
 
 ### 4. Remove favorite
 DELETE {{baseUrl}}/favorites/{{movieId}}
+Authorization: Bearer {{auth_token}}
 
 ### 5. Verify removal
 GET {{baseUrl}}/favorites
+Authorization: Bearer {{auth_token}}
+
+### 6. Catalog DOWN test
+# Stop catalog-service :8081 before running this.
+# Expected: HTTP 503 "Catalog service unavailable"
+GET {{baseUrl}}/favorites
+Authorization: Bearer {{auth_token}}

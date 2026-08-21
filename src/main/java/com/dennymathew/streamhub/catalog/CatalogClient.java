@@ -22,7 +22,7 @@ public class CatalogClient {
 
         this.restClient = RestClient.builder()
                 .baseUrl("http://localhost:8081")
-//                .requestFactory(factory)
+                .requestFactory(factory)
                 .build();
     }
 
