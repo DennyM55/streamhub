@@ -10,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
+
 @Service
 public class MovieService {
 
@@ -103,5 +105,12 @@ public class MovieService {
                 movie.getThumbnailUrl(),
                 movie.getMediaUrl()
         );
+    }
+
+    public List<MovieResponse> getMoviesByIds(List<Long> ids) {
+        return movieRepository.findAllById(ids)
+                .stream()
+                .map(this::toMovieResponse)
+                .toList();
     }
 }

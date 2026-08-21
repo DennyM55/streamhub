@@ -50,16 +50,27 @@ public class FavoriteService {
                 movie.title()
         );
     }
-
     public List<FavoriteResponse> getFavoritesByEmail(String email) {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        return favoriteRepository.findByUserId(user.getId())
-                .stream()
+        List<Favorite> favorites =
+                favoriteRepository.findByUserId(user.getId());
+
+        List<Long> movieIds = favorites.stream()
+                .map(Favorite::getMovieId)
+                .toList();
+
+        List<MovieResponse> movies =
+                catalogClient.getMoviesByIds(movieIds);
+
+        return favorites.stream()
                 .map(favorite -> {
-                    MovieResponse movie = catalogClient.getMovie(favorite.getMovieId());
+                    MovieResponse movie = movies.stream()
+                            .filter(m -> m.id().equals(favorite.getMovieId()))
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalArgumentException("Movie not found"));
 
                     return new FavoriteResponse(
                             favorite.getId(),
@@ -67,7 +78,8 @@ public class FavoriteService {
                             favorite.getMovieId(),
                             movie.title()
                     );
-                }).toList();
+                })
+                .toList();
     }
 
     @Transactional

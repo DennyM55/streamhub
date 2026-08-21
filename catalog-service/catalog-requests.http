@@ -80,3 +80,6 @@ Content-Type: application/json
 
 ###
 GET http://localhost:8081/movies/2
+
+### GET movies in batch
+GET {{baseUrl}}/movies/batch?ids=1,2,3
