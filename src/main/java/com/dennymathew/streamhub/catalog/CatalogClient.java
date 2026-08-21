@@ -5,7 +5,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-
+import io.github.resilience4j.retry.annotation.Retry;
 import java.util.List;
 
 @Component
@@ -33,6 +33,7 @@ public class CatalogClient {
                 .body(MovieResponse.class);
     }
 
+    @Retry(name = "catalog")
     public List<MovieResponse> getMoviesByIds(List<Long> ids) {
         return restClient.get()
                 .uri(uri -> uri.path("/movies/batch")
