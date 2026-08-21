@@ -4,6 +4,7 @@ import com.dennymathew.streamhub.catalog.dto.MovieResponse;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 import java.util.List;
 
@@ -11,9 +12,17 @@ import java.util.List;
 public class CatalogClient {
 
     private final RestClient restClient;
+
     public CatalogClient() {
+        SimpleClientHttpRequestFactory factory =
+                new SimpleClientHttpRequestFactory();
+
+        factory.setConnectTimeout(500);
+        factory.setReadTimeout(1000);
+
         this.restClient = RestClient.builder()
                 .baseUrl("http://localhost:8081")
+//                .requestFactory(factory)
                 .build();
     }
 
@@ -30,7 +39,8 @@ public class CatalogClient {
                         .queryParam("ids", ids)
                         .build())
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<MovieResponse>>() {});
+                .body(new ParameterizedTypeReference<List<MovieResponse>>() {
+                });
     }
 
 }
