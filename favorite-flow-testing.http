@@ -50,3 +50,4 @@ Authorization: Bearer {{auth_token}}
 # Expected: HTTP 503 "Catalog service unavailable"
 GET {{baseUrl}}/favorites
 Authorization: Bearer {{auth_token}}
+
