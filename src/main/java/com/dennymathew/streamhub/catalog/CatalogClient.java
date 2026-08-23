@@ -7,6 +7,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import io.github.resilience4j.retry.annotation.Retry;
 import java.util.List;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
 @Component
 public class CatalogClient {
@@ -34,6 +35,7 @@ public class CatalogClient {
     }
 
     @Retry(name = "catalog")
+    @CircuitBreaker(name = "catalog")
     public List<MovieResponse> getMoviesByIds(List<Long> ids) {
         return restClient.get()
                 .uri(uri -> uri.path("/movies/batch")

@@ -1,6 +1,7 @@
 package com.dennymathew.streamhub.common.exception;
 
 import com.dennymathew.streamhub.catalog.MovieNotFoundException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -51,5 +52,13 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(503)
                 .body(new ApiError(503, "Catalog service unavailable"));
+    }
+
+    @ExceptionHandler(CallNotPermittedException.class)
+    public ResponseEntity<ApiError> handleCircuitOpen(
+            CallNotPermittedException ex) {
+
+        return ResponseEntity.status(503)
+                .body(new ApiError(503, "Catalog service temporarily unavailable"));
     }
 }
