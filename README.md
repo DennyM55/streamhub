@@ -1,106 +1,79 @@
 # StreamHub
 
-Backend API for a streaming-platform style application built with Java 21, Spring Boot, PostgreSQL, Redis, JWT authentication, and a separate catalog microservice.
+A production-grade, microservice-based streaming platform backend. Designed with fault tolerance, scalability, and clean architecture in mind, StreamHub utilizes Java 21, Spring Boot, PostgreSQL, Redis, and stateless JWT authentication.
 
-This project is a learning-focused, production-grade backend build. The goal is to practice real backend engineering patterns step by step: secure authentication, REST API design, persistence, caching, service-to-service communication, resilience, debugging, and repeatable API testing.
+## System Architecture & High-Level Design (HLD)
 
-## What We Are Building
+StreamHub employs a distributed architecture separating user-centric domains from core catalog metadata. The main `StreamHub API` acts as an edge service and API aggregator, communicating with the downstream `Catalog Service` to hydrate user requests.
 
-- A Spring Boot streaming-platform backend with users, movies, favorites, and watch history.
-- A separate `catalog-service` running on port `8081`, consumed by the main StreamHub API through Spring `RestClient`.
-- A secure API layer using stateless JWT authentication and BCrypt password hashing.
-- Redis-backed caching for movie reads, with cache eviction when movie data changes.
-- Resilience4j retry and circuit breaker handling around catalog-service calls.
-- HTTP request files that act as hands-on API flow checks while building and debugging.
-
-## Current Capabilities
-
-### Authentication and Users
-
-- Register users with validated request payloads.
-- Store passwords securely with BCrypt.
-- Login returns a signed JWT.
-- Protected endpoints require `Authorization: Bearer <token>`.
-
-### Movie Catalog
-
-- Create, read, update, delete movies.
-- Search and filter movies with pagination.
-- Cache individual movie lookups in Redis.
-- Evict cached movie entries on update/delete.
-- Retrieve multiple movies by ID through catalog-service batch lookup.
-
-### Favorites
-
-- Add a movie to the authenticated user's favorites.
-- Prevent duplicate favorites.
-- List favorites with movie titles resolved through catalog-service.
-- Remove a favorite by movie ID.
-
-### Watch History
-
-- Save playback progress for the authenticated user.
-- Update existing progress for the same user/movie pair.
-- Return watch history ordered by latest activity.
-
-### Resilience and Operations
-
-- Main service uses timeouts for catalog-service calls.
-- Batch catalog lookups are protected with retry and circuit breaker configuration.
-- PostgreSQL and Redis are managed through `docker-compose.yml`.
-- Request flow files document and verify expected behavior.
-
-## Architecture
-
-```text
-HTTP Client / API Consumer
-        |
-        v
-StreamHub API :8080
-  - Users and login
-  - JWT authentication
-  - Favorites
-  - Watch history
-  - Local movie APIs
-  - Redis cache integration
-        |
-        | RestClient
-        v
-Catalog Service :8081
-  - Movie catalog CRUD
-  - Search/filter/pagination
-  - Batch movie lookup
-  - Redis-backed movie cache
-        |
-        v
-PostgreSQL + Redis
+```mermaid
+graph TD
+    Client(Client Apps) -->|HTTP REST + Bearer JWT| StreamHub(StreamHub Edge API :8080)
+    
+    subgraph Edge / User Domain
+        StreamHub -->|Read/Write User Data| UserDB[(PostgreSQL - Users/Favs)]
+        StreamHub -->|Read/Write Cache| RedisEdge[(Redis - Edge Cache)]
+    end
+    
+    subgraph Catalog Domain
+        StreamHub -->|REST Client + Resilience4j| Catalog(Catalog Service :8081)
+        Catalog -->|Read/Write Movie Metadata| CatalogDB[(PostgreSQL - Catalog)]
+    end
 ```
 
-## Tech Stack
+### Key Architectural Components
+- **StreamHub API (Edge/Aggregator)**: Handles authentication, JWT validation, user favorites, and watch history. It acts as an API gateway of sorts, aggregating data by querying the Catalog Service.
+- **Catalog Service**: A dedicated domain service managing movie entities, search algorithms, and metadata filtering.
+- **PostgreSQL**: Relational persistence for reliable ACID transactions across domains.
+- **Redis**: Distributed caching layer for high-throughput read operations, significantly reducing database latency on hot paths.
 
-- Java 21
-- Spring Boot 4.1
-- Spring Web MVC
-- Spring Security
-- Spring Data JPA
-- PostgreSQL
-- Redis
-- Resilience4j
-- JJWT
-- Maven Wrapper
-- Docker Compose
+## Low-Level Design (LLD) & Data Flow
 
-## Key API Areas
+### Resilient Data Aggregation (Favorites Flow)
+When a user requests their favorite list, the system must aggregate user-specific state with catalog metadata. To guarantee high availability and prevent cascading failures, inter-service communication is protected by **Resilience4j Circuit Breakers** and **Retry** mechanisms.
 
-### Users
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant API as StreamHub API
+    participant R as Redis Cache
+    participant Cat as Catalog Service
+    participant DB as PostgreSQL
 
+    C->>API: GET /favorites
+    API->>API: Validate JWT Signature
+    API->>DB: Fetch Favorite Movie IDs (User)
+    API->>R: Check Cached Movie Details
+    
+    alt Cache Miss / Partial Hit
+        API->>Cat: GET /movies/batch?ids=...
+        Note over API,Cat: Circuit Breaker & Timeout Protected
+        Cat->>DB: Fetch Movies
+        Cat-->>API: Return Movie DTOs
+        API->>R: Populate Missing Cache Entries
+    else Cache Hit (All)
+        R-->>API: Return Cached Movies
+    end
+    
+    API-->>C: Return Aggregated Favorites Response
+```
+
+## Engineering Principles & Patterns
+
+1. **Stateless Security (JWT)**: Built on Spring Security with JWT filters. The server holds no session state, allowing the auth layer to scale horizontally. 
+2. **Cache-Aside Pattern & Deterministic Eviction**: Heavy read APIs are backed by Redis. Mutation operations (`PUT`, `DELETE`) trigger targeted cache invalidation, enforcing eventual consistency while mitigating stale reads.
+3. **Fail-Fast & Circuit Breaking**: The StreamHub API wraps downstream HTTP calls in Resilience4j circuit breakers. If the catalog degrades, the edge service fails fast rather than exhausting thread pools, protecting global system stability.
+4. **API Composition**: StreamHub handles scatter-gather logic natively (e.g., retrieving watch history timestamps and hydrating them with real-time movie metadata via batch lookups).
+
+## API Specifications
+
+### Users / Auth
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `POST` | `/users` | Register a new user |
-| `POST` | `/users/login` | Authenticate and return JWT |
+| `POST` | `/users/login` | Authenticate and return signed JWT |
 
-### Movies
-
+### Movies (via Edge API)
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/movies` | List/search/filter movies |
@@ -108,10 +81,8 @@ PostgreSQL + Redis
 | `POST` | `/movies` | Create movie |
 | `PUT` | `/movies/{id}` | Update movie and evict cache |
 | `DELETE` | `/movies/{id}` | Delete movie and evict cache |
-| `GET` | `/movies/remote/{id}` | Fetch movie from catalog-service |
 
 ### Favorites
-
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `POST` | `/favorites/{movieId}` | Add movie to authenticated user's favorites |
@@ -119,127 +90,49 @@ PostgreSQL + Redis
 | `DELETE` | `/favorites/{movieId}` | Remove movie from authenticated user's favorites |
 
 ### Watch History
-
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `PUT` | `/history/{movieId}` | Save playback progress |
-| `GET` | `/history` | Get authenticated user's watch history |
+| `PUT` | `/history/{movieId}` | Upsert playback progress |
+| `GET` | `/history` | Get watch history ordered by recency |
 
-## Local Development
+## Local Development & Operations
 
 ### Prerequisites
-
 - Java 21
 - Docker Desktop
-- Maven Wrapper from this repository
+- Maven Wrapper (included)
 
-### Start Infrastructure
-
+### Infrastructure Setup
+Spin up PostgreSQL (`localhost:5432`) and Redis (`localhost:6379`) via Docker Compose:
 ```powershell
 docker compose up -d
 ```
 
-This starts:
-
-- PostgreSQL on `localhost:5432`
-- Redis on `localhost:6379`
-
-### Run StreamHub API
-
+### Run StreamHub (Edge API)
+Main edge API runs on `http://localhost:8080`:
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
-
-Main API runs on:
-
-```text
-http://localhost:8080
-```
+*(Note: If PostgreSQL rejects the JVM timezone `Asia/Calcutta`, inject a valid timezone using `$env:JAVA_TOOL_OPTIONS="-Duser.timezone=Asia/Kolkata"` prior to running).*
 
 ### Run Catalog Service
-
+Catalog service runs on `http://localhost:8081`:
 ```powershell
 cd catalog-service
 .\mvnw.cmd spring-boot:run
 ```
 
-Catalog service runs on:
+## Flow Testing & Verification
+The repository includes `.http` request files that serve as executable documentation and operational integration checks:
+- `flow.http` - End-to-end API and JWT lifecycle testing.
+- `favorite-flow-testing.http` - State verification for favorite toggling.
+- `redis-flow.http` - Verifies cache hits and invalidation logic.
+- `microservices.http` - Service-to-service validation.
 
-```text
-http://localhost:8081
-```
+Variables are propagated dynamically across tests (e.g., extracting JWTs from login responses and injecting them as Bearer tokens in downstream requests).
 
-If PostgreSQL rejects the JVM timezone `Asia/Calcutta`, run with a valid PostgreSQL timezone such as:
-
-```powershell
-$env:JAVA_TOOL_OPTIONS="-Duser.timezone=Asia/Kolkata"
-.\mvnw.cmd spring-boot:run
-```
-
-## Request Flow Files
-
-The repository includes HTTP files for repeatable API checks:
-
-- `flow.http` - broader API and JWT workflow checks.
-- `favorite-flow-testing.http` - login, favorites, remove favorite, verify removal.
-- `redis-flow.http` - cache behavior checks.
-- `microservices.http` - service-to-service catalog checks.
-
-The favorite flow validates login, stores the JWT after login, and reuses it in each protected request:
-
-```javascript
-client.global.set("auth_token", response.body.token);
-```
-
-```http
-Authorization: Bearer {{auth_token}}
-```
-
-## Progress So Far
-
-- Created the core StreamHub API.
-- Added persistent users, movies, favorites, and watch history.
-- Added JWT-based security and stateless protected routes.
-- Added Redis caching for catalog reads.
-- Extracted catalog behavior into a dedicated microservice.
-- Added batch movie lookup to reduce repeated catalog calls for favorites.
-- Added Resilience4j retry/circuit breaker handling around catalog calls.
-- Added API flow files for repeatable manual verification.
-- Investigated and fixed favorite-flow testing reliability by separating JWT reuse from downstream catalog availability issues.
-
-## Skills Unlocked
-
-- Spring Boot REST API design.
-- Layered backend structure: controller, service, repository, DTO, entity.
-- Secure password handling with BCrypt.
-- JWT generation, validation, and request authentication filters.
-- Stateless Spring Security configuration.
-- PostgreSQL persistence with Spring Data JPA.
-- Redis caching and cache invalidation.
-- Microservice separation with a main API and catalog-service.
-- Service-to-service HTTP calls using Spring `RestClient`.
-- Timeouts, retry, and circuit breaker patterns with Resilience4j.
-- Practical debugging across filters, controllers, services, repositories, and downstream services.
-- Manual integration testing with `.http` request flow files.
-- Docker Compose infrastructure for PostgreSQL and Redis.
-- Git workflow with focused changes and clean project history.
-
-## What We Are Learning
-
-- How to move from a simple CRUD API toward production-style backend architecture.
-- How authentication really works inside Spring Security filters.
-- Why protected routes should rely on authenticated identity instead of user IDs from URLs.
-- How caching improves read paths, and why update/delete operations must evict stale data.
-- How microservices fail in real life when downstream services are unavailable.
-- How retry and circuit breaker settings affect reliability and error behavior.
-- How to debug misleading API failures by tracing request flow end to end.
-- How to keep API behavior testable through repeatable request files.
-
-## Next Milestones
-
-- Add automated integration tests for auth, favorites, watch history, and catalog fallback behavior.
-- Externalize JWT secret and service URLs into environment-specific configuration.
-- Add structured error responses for downstream catalog failures.
-- Add OpenAPI documentation.
-- Add CI checks for compile and tests.
-- Add container images for both services.
+## Roadmap & Future Enhancements
+- **Automated Integration Pipelines**: Expand CI checks for resilience degradation.
+- **Config Externalization**: Vault or Spring Cloud Config integration for JWT secrets and service URIs.
+- **Observability**: Add OpenTelemetry tracing across the Edge and Catalog boundary.
+- **Containerization**: Multi-stage Dockerfiles for Kubernetes deployment.
