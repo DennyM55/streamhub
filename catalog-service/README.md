@@ -7,7 +7,7 @@ Provides CRUD and search endpoints for movies, backed by PostgreSQL and optional
 
 ## Requirements
 - Java 21
-- Maven
+- Maven Wrapper (included)
 - PostgreSQL (default: jdbc:postgresql://localhost:5432/streamhub)
 - Redis (optional, default host: localhost:6379)
 
@@ -22,10 +22,10 @@ Important keys:
 - spring.data.redis.port
 
 ## Build
-mvn clean package
+.\mvnw.cmd clean package
 
 ## Run
-mvn spring-boot:run
+.\mvnw.cmd spring-boot:run
 
 or
 
@@ -53,7 +53,7 @@ Create request example (JSON):
 }
 
 ## Tests
-mvn test
+.\mvnw.cmd test
 
 ## References
 See HELP.md for quick links to Spring and Maven guides used by this project.
