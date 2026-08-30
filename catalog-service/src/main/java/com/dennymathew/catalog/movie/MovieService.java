@@ -82,9 +82,7 @@ public class MovieService {
         movie.setThumbnailUrl(request.thumbnailUrl());
         movie.setMediaUrl(request.mediaUrl());
 
-        Movie savedMovie = movieRepository.save(movie);
-
-        return toMovieResponse(savedMovie);
+        return toMovieResponse(movie);
     }
 
     @CacheEvict(cacheNames = "movies", key = "#id")
