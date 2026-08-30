@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -66,6 +67,7 @@ public class MovieService {
         return movies.map(this::toMovieResponse);
     }
 
+    @Transactional
     @CacheEvict(cacheNames = "movies", key = "#id")
     public MovieResponse updateMovie(Long id, UpdateMovieRequest request) {
 
