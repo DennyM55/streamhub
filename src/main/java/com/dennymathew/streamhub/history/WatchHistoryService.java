@@ -2,6 +2,7 @@ package com.dennymathew.streamhub.history;
 
 import com.dennymathew.streamhub.catalog.Movie;
 import com.dennymathew.streamhub.catalog.MovieRepository;
+import com.dennymathew.streamhub.events.MovieWatchedEventProducer;
 import com.dennymathew.streamhub.history.dto.WatchHistoryResponse;
 import com.dennymathew.streamhub.user.User;
 import com.dennymathew.streamhub.user.UserRepository;
@@ -16,14 +17,17 @@ public class WatchHistoryService {
     private final WatchHistoryRepository watchHistoryRepository;
     private final UserRepository userRepository;
     private final MovieRepository movieRepository;
+    private final MovieWatchedEventProducer movieWatchedEventProducer;
 
     public WatchHistoryService(
             WatchHistoryRepository watchHistoryRepository,
             UserRepository userRepository,
-            MovieRepository movieRepository) {
+            MovieRepository movieRepository,
+            MovieWatchedEventProducer movieWatchedEventProducer) {
         this.watchHistoryRepository = watchHistoryRepository;
         this.userRepository = userRepository;
         this.movieRepository = movieRepository;
+        this.movieWatchedEventProducer = movieWatchedEventProducer;
     }
 
     public WatchHistoryResponse saveProgress(
@@ -46,9 +50,15 @@ public class WatchHistoryService {
                     return newHistory;
                 });
 
+        LocalDateTime watchedAt = LocalDateTime.now();
         history.setProgressSeconds(progressSeconds);
-        history.setLastWatchedAt(LocalDateTime.now());
+        history.setLastWatchedAt(watchedAt);
         WatchHistory savedHistory = watchHistoryRepository.save(history);
+        movieWatchedEventProducer.publishMovieWatched(
+                savedHistory.getMovie().getId(),
+                savedHistory.getUser().getId(),
+                savedHistory.getLastWatchedAt()
+        );
         return new WatchHistoryResponse(
                 savedHistory.getId(),
                 savedHistory.getUser().getId(),
