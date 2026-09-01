@@ -19,5 +19,11 @@ services:
     ports:
       - "6379:6379"
 
+  kafka:
+    image: apache/kafka:4.0.2
+    container_name: streamhub-kafka
+    ports:
+      - "9092:9092"
+
 volumes:
   postgres-data:
