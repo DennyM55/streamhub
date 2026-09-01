@@ -10,7 +10,7 @@ public class MovieWatchedEventConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(MovieWatchedEventConsumer.class);
 
-    @KafkaListener(topics = "${streamhub.kafka.movie-watched-topic}")
+    @KafkaListener(topics = "${streamhub.kafka.movie-watched-topic}", groupId = "streamhub-history")
     public void handle(MovieWatchedEvent event) {
         log.info("Received movie watched event: {}", event);
     }
