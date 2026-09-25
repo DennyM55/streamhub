@@ -1,0 +1,100 @@
+# Free application services. Supply external PostgreSQL and Kafka credentials at setup.
+envVarGroups:
+  - name: streamhub-service-keys
+    envVars:
+      - key: CATALOG_API_KEY
+        generateValue: true
+
+services:
+  - type: keyvalue
+    name: streamhub-cache
+    plan: free
+    region: frankfurt
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
+
+  - type: web
+    name: streamhub-catalog
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./catalog-service/Dockerfile
+    dockerContext: ./catalog-service
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: streamhub-service-keys
+      - key: PORT
+        value: '8081'
+      - key: JAVA_TOOL_OPTIONS
+        value: -Xms64m -Xmx256m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USER
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: SPRING_DATA_REDIS_URL
+        fromService:
+          type: keyvalue
+          name: streamhub-cache
+          property: connectionString
+      - key: STREAMHUB_SEED_DEMO
+        value: 'true'
+      - key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+        value: '3'
+
+  - type: web
+    name: streamhub-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: streamhub-service-keys
+      - key: PORT
+        value: '8080'
+      - key: JAVA_TOOL_OPTIONS
+        value: -Xms64m -Xmx256m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USER
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: SPRING_DATA_REDIS_URL
+        fromService:
+          type: keyvalue
+          name: streamhub-cache
+          property: connectionString
+      - key: CATALOG_URL
+        sync: false
+      - key: CATALOG_CONNECT_TIMEOUT_MS
+        value: '10000'
+      - key: CATALOG_READ_TIMEOUT_MS
+        value: '90000'
+      - key: CORS_ORIGIN
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_API_KEY
+        generateValue: true
+      - key: KAFKA_BOOTSTRAP_SERVERS
+        sync: false
+      - key: KAFKA_SECURITY_PROTOCOL
+        value: SASL_SSL
+      - key: KAFKA_SASL_MECHANISM
+        sync: false
+      - key: KAFKA_SASL_JAAS_CONFIG
+        sync: false
+      - key: SPRING_KAFKA_SSL_TRUSTSTORETYPE
+        value: PEM
+      - key: SPRING_KAFKA_SSL_TRUSTSTORECERTIFICATES
+        sync: false
+      - key: KAFKA_AUTO_CREATE_TOPICS
+        value: 'false'
+      - key: KAFKA_TOPIC_PARTITIONS
+        value: '2'
+      - key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+        value: '3'

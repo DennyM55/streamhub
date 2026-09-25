@@ -67,6 +67,19 @@ public class MovieService {
         return movies.map(this::toMovieResponse);
     }
 
+    public Page<MovieResponse> getMovies(String search, String genre, Integer releaseYear,
+                                        Integer durationMinutes, Pageable pageable) {
+        if ((releaseYear != null && releaseYear < 1) || (durationMinutes != null && durationMinutes < 1)) {
+            throw new IllegalArgumentException("releaseYear and durationMinutes must be positive");
+        }
+        return movieRepository.findAll(MovieSpecification.matching(search, genre, releaseYear, durationMinutes), pageable)
+                .map(this::toMovieResponse);
+    }
+
+    public List<String> getGenres() {
+        return movieRepository.findDistinctGenres();
+    }
+
     @Transactional
     @CacheEvict(cacheNames = "movies", key = "#id")
     public MovieResponse updateMovie(Long id, UpdateMovieRequest request) {
@@ -108,6 +121,9 @@ public class MovieService {
     }
 
     public List<MovieResponse> getMoviesByIds(List<Long> ids) {
+        if (ids.isEmpty() || ids.size() > 50 || ids.stream().anyMatch(id -> id == null || id < 1)) {
+            throw new IllegalArgumentException("Provide between 1 and 50 positive movie IDs");
+        }
         return movieRepository.findAllById(ids)
                 .stream()
                 .map(this::toMovieResponse)

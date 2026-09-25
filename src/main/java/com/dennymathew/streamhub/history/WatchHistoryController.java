@@ -2,6 +2,7 @@ package com.dennymathew.streamhub.history;
 
 import com.dennymathew.streamhub.history.dto.UpdateProgressRequest;
 import com.dennymathew.streamhub.history.dto.WatchHistoryResponse;
+import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +21,7 @@ public class WatchHistoryController {
     @PutMapping("/{movieId}")
     public WatchHistoryResponse updateProgress(
             @PathVariable Long movieId,
-            @RequestBody UpdateProgressRequest request,
+            @Valid @RequestBody UpdateProgressRequest request,
             Authentication authentication) {
 
         return watchHistoryService.saveProgressByEmail(

@@ -20,6 +20,10 @@ public class MovieWatchedEventConsumer {
 
     @KafkaListener(topics = "${streamhub.kafka.movie-watched-topic}", groupId = "streamhub-history")
     public void handle(MovieWatchedEvent event) {
+        if (event == null || event.eventId() == null || event.movieId() == null || event.movieId() <= 0
+                || event.userId() == null || event.userId() <= 0 || event.watchedAt() == null) {
+            throw new IllegalArgumentException("Invalid movie-watched event");
+        }
         if (!markProcessed(event)) {
             log.info("Skipping duplicate movie watched event: {}", event.eventId());
             return;

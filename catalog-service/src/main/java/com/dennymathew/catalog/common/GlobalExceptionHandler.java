@@ -10,6 +10,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiError> handleInvalidQuery(IllegalArgumentException exception) {
+        return ResponseEntity.badRequest().body(new ApiError(400, exception.getMessage()));
+    }
+
     @ExceptionHandler(MovieNotFoundException.class)
     public ResponseEntity<ApiError> handleMovieNotFound(MovieNotFoundException exception) {
         return ResponseEntity

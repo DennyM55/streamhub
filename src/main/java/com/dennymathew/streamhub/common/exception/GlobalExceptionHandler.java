@@ -8,6 +8,11 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -43,7 +48,7 @@ public class GlobalExceptionHandler {
             DataIntegrityViolationException ex) {
 
         return ResponseEntity.badRequest()
-                .body(new ApiError(400, "Favorite already exists"));
+                .body(new ApiError(400, "A record with these details already exists"));
     }
 
     @ExceptionHandler(ResourceAccessException.class)
@@ -60,5 +65,26 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(503)
                 .body(new ApiError(503, "Catalog service temporarily unavailable"));
+    }
+    @ExceptionHandler(HttpClientErrorException.class)
+    public ResponseEntity<ApiError> handleCatalogClientError(HttpClientErrorException ex) {
+        int status = ex.getStatusCode().value();
+        String message = status == 404 ? "Movie not found" : "Catalog request rejected";
+        return ResponseEntity.status(status).body(new ApiError(status, message));
+    }
+
+    @ExceptionHandler(HttpServerErrorException.class)
+    public ResponseEntity<ApiError> handleCatalogServerError(HttpServerErrorException ex) {
+        return ResponseEntity.status(503).body(new ApiError(503, "Catalog service unavailable"));
+    }
+
+    @ExceptionHandler({HandlerMethodValidationException.class, HttpMessageNotReadableException.class})
+    public ResponseEntity<ApiError> handleMalformedRequest(Exception ex) {
+        return ResponseEntity.badRequest().body(new ApiError(400, "Invalid request parameters"));
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiError> handleInvalidLogin(BadCredentialsException ex) {
+        return ResponseEntity.status(401).body(new ApiError(401, "Invalid email or password"));
     }
 }

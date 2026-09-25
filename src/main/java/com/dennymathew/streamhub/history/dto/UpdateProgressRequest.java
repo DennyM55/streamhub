@@ -1,6 +1,4 @@
 package com.dennymathew.streamhub.history.dto;
-
-public record UpdateProgressRequest(
-        Integer progressSeconds
-) {
-}
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+public record UpdateProgressRequest(@NotNull @Min(0) Integer progressSeconds) {}

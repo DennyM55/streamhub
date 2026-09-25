@@ -70,13 +70,13 @@ public class FavoriteService {
                     MovieResponse movie = movies.stream()
                             .filter(m -> m.id().equals(favorite.getMovieId()))
                             .findFirst()
-                            .orElseThrow(() -> new IllegalArgumentException("Movie not found"));
+                            .orElse(null);
 
                     return new FavoriteResponse(
                             favorite.getId(),
                             favorite.getUser().getId(),
                             favorite.getMovieId(),
-                            movie.title()
+                            movie == null ? "Unavailable title" : movie.title()
                     );
                 })
                 .toList();
