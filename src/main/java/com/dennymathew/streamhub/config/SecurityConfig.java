@@ -57,7 +57,8 @@ public class SecurityConfig {
             HttpSecurity http,
             JwtAuthenticationFilter jwtAuthenticationFilter,
             RestAuthenticationEntryPoint restAuthenticationEntryPoint,
-            @Value("${streamhub.admin.key:}") String adminKey)
+            @Value("${streamhub.admin.key:}") String adminKey,
+            @Value("${STREAMHUB_DEMO_ONLY:false}") boolean demoOnly)
             throws Exception {
 
         return http
@@ -93,11 +94,9 @@ public class SecurityConfig {
                                     && MessageDigest.isEqual(adminKey.getBytes(StandardCharsets.UTF_8),
                                                             supplied.getBytes(StandardCharsets.UTF_8)));
                         })
-                        .requestMatchers(
-                                "/users",
-                                "/error",
-                                "/users/login"
-                        ).permitAll()
+                        .requestMatchers("/users", "/users/login").access((authentication, context) ->
+                                new AuthorizationDecision(!demoOnly))
+                        .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )
 

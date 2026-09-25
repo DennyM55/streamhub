@@ -2,7 +2,7 @@
 
 A Java 21 / Spring Boot media-platform demonstration with a React frontend, a separate catalogue service, PostgreSQL persistence, Redis caching and Kafka watch events.
 
-**Live demo:** [streamhub-dennym55.onrender.com](https://streamhub-dennym55.onrender.com). Choose **Try the demo** for a private guest collection. Free services sleep when idle; the first visit can take several minutes. Use **Try again** if startup exceeds the waiting period. See the [verification record](deploy/VERIFICATION.md) for tested scope and limitations.
+**Live demo:** [streamhub-dennym55.onrender.com](https://streamhub-dennym55.onrender.com). Choose **Try the demo** for a guest collection saved in your browser. The public demo serves two full open films without waiting for the Java services. Email accounts are temporarily disabled. See the [verification record](deploy/VERIFICATION.md) for tested scope and limitations.
 
 ## Try it locally
 
@@ -102,3 +102,12 @@ See [deployment configuration](deploy/README.md). Render free static hosting is 
 - Hibernate schema updates suit the fresh demo deployment. Existing installations require a deliberate data migration before adopting the new service split.
 - OpenSearch, Kubernetes, AWS deployment, recommendations and AI are outside this release.
 - Guest accounts are isolated but persist until maintenance removes them; production abuse controls, guest expiry and operational backup/restore policies remain future work.
+
+### Public guest demo hotfix
+The hosted frontend uses `VITE_DEMO_MODE=true`: two complete CC-licensed films are
+bundled at build time, and guest favourites/history are stored in the browser.
+It does not rely on free Java services waking up. This mode does **not** demonstrate
+PostgreSQL/Kafka persistence; the original API mode remains available with the flag
+unset. `STREAMHUB_DEMO_ONLY=true` blocks email registration/login on the deployed
+API until verified email ownership is implemented. No personal email is required.
+Full films and credits are prepared by `frontend/scripts/prepare-demo-media.mjs`.

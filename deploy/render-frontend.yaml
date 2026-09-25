@@ -10,6 +10,8 @@ services:
     paths:
     - frontend/**
   envVars:
+  - key: VITE_DEMO_MODE
+    value: 'true'
   - key: NODE_VERSION
     value: '24'
   - key: SKIP_INSTALL_DEPS

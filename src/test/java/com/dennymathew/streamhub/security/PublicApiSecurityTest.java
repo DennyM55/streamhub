@@ -36,10 +36,23 @@ class PublicApiSecurityTest {
                     .andExpect(status().isOk());
         }
     }
-    private AnnotationConfigWebApplicationContext context() {
+    @Test void demoOnlyBlocksEmailRegistrationAndLoginEvenWithExistingToken() throws Exception {
+        try (var context = context(true)) {
+            MockMvc mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
+            String token = context.getBean(JwtService.class).generateToken("viewer@example.com");
+            for (String path : new String[]{"/users", "/users/login"}) {
+                mvc.perform(post(path)).andExpect(status().isUnauthorized());
+                mvc.perform(post(path).header("Authorization", "Bearer " + token)).andExpect(status().isForbidden());
+            }
+            mvc.perform(get("/movies")).andExpect(status().isOk());
+        }
+    }
+    private AnnotationConfigWebApplicationContext context() { return context(false); }
+    private AnnotationConfigWebApplicationContext context(boolean demoOnly) {
         var context=new AnnotationConfigWebApplicationContext();
         context.setServletContext(new MockServletContext());
         context.getEnvironment().getPropertySources().addFirst(new MapPropertySource("test",Map.of(
+                "STREAMHUB_DEMO_ONLY", Boolean.toString(demoOnly),
                 "streamhub.cors.origin","http://localhost:5173",
                 "streamhub.admin.key","admin-test-key",
                 "streamhub.jwt.secret","test-jwt-key-that-is-at-least-thirty-two-characters")));

@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Full demo films are fetched and verified during the static build.
+public/media/*-full.mp4
