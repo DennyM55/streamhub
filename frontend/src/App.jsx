@@ -5,7 +5,7 @@ const API = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080').repla
 
 async function api(path, token, options = {}) {
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 150_000)
+  const timeout = setTimeout(() => controller.abort(), 300_000)
   try {
     let response
     try {
@@ -45,7 +45,7 @@ function StartupNotice() {
     return () => clearTimeout(timer)
   }, [])
   if (!slow) return null
-  return <p className="startup-notice" role="status"><span aria-hidden="true">◌</span> The demo services may be waking up. On free hosting, the first visit can take a minute or longer. We're still trying to connect.</p>
+  return <p className="startup-notice" role="status"><span aria-hidden="true">◌</span> The demo services may be waking up. On free hosting, the first visit can take several minutes. We're still trying to connect.</p>
 }
 
 function safeMediaUrl(value) {

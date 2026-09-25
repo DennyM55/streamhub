@@ -9,6 +9,7 @@ from urllib.request import Request, urlopen
 
 BASE = os.environ.get('API_BASE_URL', 'http://localhost:8080').rstrip('/')
 ADMIN = os.environ.get('ADMIN_API_KEY', '')
+TIMEOUT = float(os.environ.get('API_TIMEOUT_SECONDS', '20'))
 checks = []
 
 def call(path, method='GET', body=None, token=None, admin=False, expected=200):
@@ -22,7 +23,7 @@ def call(path, method='GET', body=None, token=None, admin=False, expected=200):
     request = Request(BASE + path, data=json.dumps(body).encode() if body is not None else None,
                       method=method, headers=headers)
     try:
-        with urlopen(request, timeout=20) as response:
+        with urlopen(request, timeout=TIMEOUT) as response:
             code, raw = response.status, response.read()
     except HTTPError as error:
         code, raw = error.code, error.read()

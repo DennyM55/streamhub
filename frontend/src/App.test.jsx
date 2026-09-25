@@ -120,7 +120,7 @@ describe('StreamHub frontend API flows', () => {
       await act(async () => { await vi.advanceTimersByTimeAsync(6_001) })
       expect(screen.getByText(/The demo services may be waking up/)).toBeTruthy()
       expect(screen.queryByRole('alert')).toBeNull()
-      await act(async () => { await vi.advanceTimersByTimeAsync(150_000) })
+      await act(async () => { await vi.advanceTimersByTimeAsync(300_000) })
       expect(screen.getByRole('alert').textContent).toContain('taking longer than expected')
       expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy()
     } finally { vi.useRealTimers() }
