@@ -2,7 +2,7 @@
 
 A Java 21 / Spring Boot media-platform demonstration with a React frontend, a separate catalogue service, PostgreSQL persistence, Redis caching and Kafka watch events.
 
-**Deployment status:** implementation and Docker integration checks pass in [GitHub Actions](https://github.com/DennyM55/streamhub/actions/runs/36125821385). Public hosting is pending account setup. A live URL will be added here only after the hosted user flows pass verification. See the [verification record](deploy/VERIFICATION.md).
+**Live demo:** [streamhub-dennym55.onrender.com](https://streamhub-dennym55.onrender.com). Choose **Try the demo** for a private guest collection. Free services sleep when idle; the first visit can take several minutes. Use **Try again** if startup exceeds the waiting period. See the [verification record](deploy/VERIFICATION.md) for tested scope and limitations.
 
 ## Try it locally
 

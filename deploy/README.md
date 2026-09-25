@@ -1,6 +1,6 @@
 # Deployment
 
-The chosen demo route is Render free static hosting for the frontend, Render Free for the two Java services and cache, and Aiven's free PostgreSQL and Apache Kafka tiers. Vercel remains an optional supported frontend host. The Dockerfiles and Compose setup remain portable. Account access and actual service provisioning are required before there is a live URL.
+The chosen demo route is Render free static hosting for the frontend, Render Free for the two Java services and cache, and Aiven's free PostgreSQL and Apache Kafka tiers. Vercel remains an optional supported frontend host. The Dockerfiles and Compose setup remain portable. The deployed frontend is https://streamhub-dennym55.onrender.com, backed by https://streamhub-api-fvnw.onrender.com and https://streamhub-catalog.onrender.com.
 
 ## Free-tier constraints
 
@@ -15,7 +15,7 @@ References: [Render Free](https://render.com/docs/free), [Aiven Kafka Free](http
 
 ## Render setup
 
-Deploy in two stages so the API receives the actual catalogue URL. First import the root `render.yaml`: it creates the free catalogue web service, free cache and shared generated service key. Once the catalogue is live, import `deploy/render-api.yaml` as a second Blueprint in the same workspace; it references the existing cache and environment group and creates the free API with generated JWT/admin secrets. Supply the real catalogue HTTPS URL, database/Kafka credentials and the frontend origin. For initial API verification before frontend hosting, the existing local development origin `http://localhost:5173` can be used; replace it with the final frontend origin before testing the public frontend. Existing Render resource names must be checked before importing either blueprint to avoid modifying an unrelated service.
+Deploy the backend in two stages so the API receives the actual catalogue URL. First import the root `render.yaml`: it creates the free catalogue web service, free cache and shared generated service key. Once the catalogue is live, import `deploy/render-api.yaml` as a second Blueprint in the same workspace; it references the existing cache and environment group and creates the free API with generated JWT/admin secrets. Supply the real catalogue HTTPS URL, database/Kafka credentials and the frontend origin. For initial API verification before frontend hosting, the existing local development origin `http://localhost:5173` can be used; replace it with the final frontend origin before testing the public frontend. Existing Render resource names must be checked before importing either blueprint to avoid modifying an unrelated service.
 
 For Aiven Kafka, use the exact SASL mechanism and JAAS connection settings shown by its service. The blueprint uses `SPRING_KAFKA_SSL_TRUSTSTORETYPE=PEM` and prompts for `SPRING_KAFKA_SSL_TRUSTSTORECERTIFICATES`: paste the service CA certificate as a multiline PEM value, including its BEGIN/END lines. If the selected endpoint instead uses a publicly trusted CA, remove both PEM variables to use the JVM trust store. Keep TLS hostname/certificate validation enabled. Never put these values in Git or frontend build variables.
 
