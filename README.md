@@ -1,138 +1,104 @@
 # StreamHub
 
-A production-grade, microservice-based streaming platform backend. Designed with fault tolerance, scalability, and clean architecture in mind, StreamHub utilizes Java 21, Spring Boot, PostgreSQL, Redis, and stateless JWT authentication.
+A Java 21 / Spring Boot media-platform demonstration with a React frontend, a separate catalogue service, PostgreSQL persistence, Redis caching and Kafka watch events.
 
-## System Architecture & High-Level Design (HLD)
+**Deployment status:** source and automated tests are being verified for the public demo. A live URL will be added here only after the hosted user flows have passed verification.
 
-StreamHub employs a distributed architecture separating user-centric domains from core catalog metadata. The main `StreamHub API` acts as an edge service and API aggregator, communicating with the downstream `Catalog Service` to hydrate user requests.
+## Try it locally
+
+Requires Docker with Compose and OpenSSL. The initial build downloads Maven and npm dependencies.
+
+```bash
+bash scripts/setup-local.sh
+docker compose up --build -d
+```
+
+Open **http://localhost:8088**. Choose **Try the demo** to get an isolated guest account, or register an account. The catalogue seeds twelve demonstration entries, including four open-film previews. Film credits appear in the frontend.
+
+The setup script generates local secrets in an ignored `.env` file. Both Java applications run as non-root container users. The Compose project uses its own `streamhub-demo` data volumes, separate from the older development setup.
+
+## Nine catalogue/user capabilities
+
+| Capability | Implementation |
+| --- | --- |
+| Registration | Validated users and BCrypt password hashes |
+| Login and authenticated access | Signed JWTs, expiry validation and protected user APIs |
+| Catalogue management | Create/read/update/delete through a dedicated catalogue service; writes require an admin key |
+| Search | Title search |
+| Filtering | Genre, release year and duration filters |
+| Pagination | Bounded page size and sort handling |
+| Favourites | Add, list and remove favourites for the signed-in user |
+| Watch history | History ordered by recency, isolated by user |
+| Playback progress | Validated saved position plus transactional watch event recording |
+
+The public frontend provides browse/search/filter/pagination, guest/login/register, favourites, watch history and progress saving. Administrative catalogue mutations are exercised by tests and API calls, not exposed to public demo visitors.
+
+## Architecture
 
 ```mermaid
-graph TD
-    Client(Client Apps) -->|HTTP REST + Bearer JWT| StreamHub(StreamHub Edge API :8080)
-    
-    subgraph Edge / User Domain
-        StreamHub -->|Read/Write User Data| UserDB[(PostgreSQL - Users/Favs)]
-        StreamHub -->|Read/Write Cache| RedisEdge[(Redis - Edge Cache)]
-    end
-    
-    subgraph Catalog Domain
-        StreamHub -->|REST Client + Resilience4j| Catalog(Catalog Service :8081)
-        Catalog -->|Read/Write Movie Metadata| CatalogDB[(PostgreSQL - Catalog)]
-    end
+flowchart TD
+  Web["React frontend"] --> API["StreamHub API"]
+  API --> Catalog["Catalogue service"]
+  Catalog --> CatalogDB[("Catalogue PostgreSQL")]
+  Catalog --> Redis[("Redis cache")]
+  API --> UserDB[("Users, history and outbox")]
+  API --> Kafka["Kafka watch events"]
+  Kafka --> Consumer["Duplicate-aware consumer"]
+  Consumer --> UserDB
 ```
 
-### Key Architectural Components
-- **StreamHub API (Edge/Aggregator)**: Handles authentication, JWT validation, user favorites, and watch history. It acts as an API gateway of sorts, aggregating data by querying the Catalog Service.
-- **Catalog Service**: A dedicated domain service managing movie entities, search algorithms, and metadata filtering.
-- **PostgreSQL**: Relational persistence for reliable ACID transactions across domains.
-- **Redis**: Distributed caching layer for high-throughput read operations, significantly reducing database latency on hot paths.
+The edge API uses HTTP to read and mutate the catalogue. It stores movie IDs and title snapshots in watch history, without a cross-service entity relationship. Separate logical databases are used by the included Compose setup.
 
-## Low-Level Design (LLD) & Data Flow
+### Caching and downstream failures
 
-### Resilient Data Aggregation (Favorites Flow)
-When a user requests their favorite list, the system must aggregate user-specific state with catalog metadata. To guarantee high availability and prevent cascading failures, inter-service communication is protected by **Resilience4j Circuit Breakers** and **Retry** mechanisms.
+Catalogue lookups use Redis cache-aside reads and update/delete eviction. A batch endpoint assembles favourites without one remote request per favourite. The edge client has connection/read timeouts, a programmatic Resilience4j retry and a circuit breaker. Unit tests exercise both retry and open-circuit behaviour.
 
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant API as StreamHub API
-    participant R as Redis Cache
-    participant Cat as Catalog Service
-    participant DB as PostgreSQL
+### Kafka delivery
 
-    C->>API: GET /favorites
-    API->>API: Validate JWT Signature
-    API->>DB: Fetch Favorite Movie IDs (User)
-    API->>R: Check Cached Movie Details
-    
-    alt Cache Miss / Partial Hit
-        API->>Cat: GET /movies/batch?ids=...
-        Note over API,Cat: Circuit Breaker & Timeout Protected
-        Cat->>DB: Fetch Movies
-        Cat-->>API: Return Movie DTOs
-        API->>R: Populate Missing Cache Entries
-    else Cache Hit (All)
-        R-->>API: Return Cached Movies
-    end
-    
-    API-->>C: Return Aggregated Favorites Response
-```
+Saving progress also writes a durable outbox row in the same database transaction. A scheduled publisher waits for Kafka acknowledgement before marking the row published. The consumer stores an event ID using a unique database key so redelivery is suppressed. Failed handling is retried and then sent to a dead-letter topic; failure to publish the dead-letter record is not treated as success.
 
-## Engineering Principles & Patterns
+This is an at-least-once delivery design with duplicate suppression. The consumer records processing receipts and logs events; it does not implement recommendations or analytics aggregation. The local demo has a single Kafka broker, so it does not provide broker redundancy.
 
-1. **Stateless Security (JWT)**: Built on Spring Security with JWT filters. The server holds no session state, allowing the auth layer to scale horizontally. 
-2. **Cache-Aside Pattern & Deterministic Eviction**: Heavy read APIs are backed by Redis. Mutation operations (`PUT`, `DELETE`) trigger targeted cache invalidation, enforcing eventual consistency while mitigating stale reads.
-3. **Fail-Fast & Circuit Breaking**: The StreamHub API wraps downstream HTTP calls in Resilience4j circuit breakers. If the catalog degrades, the edge service fails fast rather than exhausting thread pools, protecting global system stability.
-4. **API Composition**: StreamHub handles scatter-gather logic natively (e.g., retrieving watch history timestamps and hydrating them with real-time movie metadata via batch lookups).
+## API
 
-## API Specifications
-
-### Users / Auth
-| Method | Endpoint | Purpose |
+| Method | Route | Access |
 | --- | --- | --- |
-| `POST` | `/users` | Register a new user |
-| `POST` | `/users/login` | Authenticate and return signed JWT |
+| GET | `/health` | Public application liveness |
+| GET | `/movies`, `/movies/{id}`, `/movies/genres` | Public |
+| POST | `/demo/session` | Public; isolated guest token |
+| POST | `/users`, `/users/login` | Public |
+| GET/POST/DELETE | `/favorites`, `/favorites/{movieId}` | Bearer token |
+| GET/PUT | `/history`, `/history/{movieId}` | Bearer token |
+| POST/PUT/DELETE | `/movies`, `/movies/{id}` | `X-Admin-Key` |
 
-### Movies (via Edge API)
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `GET` | `/movies` | List/search/filter movies |
-| `GET` | `/movies/{id}` | Get one movie |
-| `POST` | `/movies` | Create movie |
-| `PUT` | `/movies/{id}` | Update movie and evict cache |
-| `DELETE` | `/movies/{id}` | Delete movie and evict cache |
+The catalogue service additionally requires `X-Catalog-Key` for mutations. These keys are never part of the frontend bundle.
 
-### Favorites
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `POST` | `/favorites/{movieId}` | Add movie to authenticated user's favorites |
-| `GET` | `/favorites` | List authenticated user's favorites |
-| `DELETE` | `/favorites/{movieId}` | Remove movie from authenticated user's favorites |
+## Verification
 
-### Watch History
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `PUT` | `/history/{movieId}` | Upsert playback progress |
-| `GET` | `/history` | Get watch history ordered by recency |
+```bash
+# Real running API checks (requires the Compose stack)
+python3 scripts/smoke.py
 
-## Local Development & Operations
+# Java unit/security/resilience tests
+bash mvnw test
+(cd catalog-service && bash mvnw test)
 
-### Prerequisites
-- Java 21
-- Docker Desktop
-- Maven Wrapper (included)
-
-### Infrastructure Setup
-Spin up PostgreSQL (`localhost:5432`) and Redis (`localhost:6379`) via Docker Compose:
-```powershell
-docker compose up -d
+# Frontend tests and production build
+(cd frontend && npm ci && npm test -- --run && npm run lint && npm run build)
 ```
 
-### Run StreamHub (Edge API)
-Main edge API runs on `http://localhost:8080`:
-```powershell
-.\mvnw.cmd spring-boot:run
-```
-*(Note: If PostgreSQL rejects the JVM timezone `Asia/Calcutta`, inject a valid timezone using `$env:JAVA_TOOL_OPTIONS="-Duser.timezone=Asia/Kolkata"` prior to running).*
+The PostgreSQL Testcontainers tests run when Docker is available. Context tests additionally require `RUN_SYSTEM_TESTS=true` and configured running dependencies. The GitHub workflow runs Java tests, frontend tests/build, and a full Docker-stack smoke test including durable Kafka-consumer evidence. A skipped infrastructure test is not treated as verified deployment coverage.
 
-### Run Catalog Service
-Catalog service runs on `http://localhost:8081`:
-```powershell
-cd catalog-service
-.\mvnw.cmd spring-boot:run
-```
+The smoke test checks catalogue reads/search/pagination, JWT rejection, isolated guests, favourites, progress validation/persistence, registration/login and public mutation denial. Supplying `ADMIN_API_KEY` adds administrator CRUD and cache invalidation checks. Tokens and secrets are not printed.
 
-## Flow Testing & Verification
-The repository includes `.http` request files that serve as executable documentation and operational integration checks:
-- `flow.http` - End-to-end API and JWT lifecycle testing.
-- `favorite-flow-testing.http` - State verification for favorite toggling.
-- `redis-flow.http` - Verifies cache hits and invalidation logic.
-- `microservices.http` - Service-to-service validation.
+## Hosting
 
-Variables are propagated dynamically across tests (e.g., extracting JWTs from login responses and injecting them as Bearer tokens in downstream requests).
+See [deployment configuration](deploy/README.md). Vercel hosts the frontend; container hosting runs the Java services. PostgreSQL, Redis and Kafka require separate hosted resources. Free hosting may sleep or suspend services when quotas are reached; a public demo is not a production SLA.
 
-## Roadmap & Future Enhancements
-- **Automated Integration Pipelines**: Expand CI checks for resilience degradation.
-- **Config Externalization**: Vault or Spring Cloud Config integration for JWT secrets and service URIs.
-- **Observability**: Add OpenTelemetry tracing across the Edge and Catalog boundary.
-- **Containerization**: Multi-stage Dockerfiles for Kubernetes deployment.
+## Current scope and limits
+
+- Personal portfolio demonstration; no measured production throughput or real customer scale is claimed.
+- Standard media URLs and browser playback; no transcoding, DRM, CDN packaging or paid content distribution.
+- Hibernate schema updates suit the fresh demo deployment. Existing installations require a deliberate data migration before adopting the new service split.
+- OpenSearch, Kubernetes, AWS deployment, recommendations and AI are outside this release.
+- Guest accounts are isolated but persist until maintenance removes them; production abuse controls, guest expiry and operational backup/restore policies remain future work.
