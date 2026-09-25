@@ -57,3 +57,11 @@ services:
     value: '2'
   - key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
     value: '3'
+  buildFilter:
+    paths:
+    - src/**
+    - pom.xml
+    - Dockerfile
+    - docker-entrypoint.sh
+    - mvnw
+    - .mvn/**

@@ -93,7 +93,7 @@ The smoke test checks catalogue reads/search/pagination, JWT rejection, isolated
 
 ## Hosting
 
-See [deployment configuration](deploy/README.md). Vercel hosts the frontend; container hosting runs the Java services. PostgreSQL, Redis and Kafka require separate hosted resources. Free hosting may sleep or suspend services when quotas are reached; a public demo is not a production SLA.
+See [deployment configuration](deploy/README.md). Render free static hosting is configured for the frontend, with Vercel supported as an alternative; Docker hosting runs the Java services. PostgreSQL, Redis and Kafka require separate hosted resources. Free hosting may sleep or suspend services when quotas are reached; a public demo is not a production SLA.
 
 ## Current scope and limits
 

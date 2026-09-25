@@ -42,3 +42,6 @@ services:
     value: 'true'
   - key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
     value: '3'
+  buildFilter:
+    paths:
+    - catalog-service/**
