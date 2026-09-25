@@ -7,6 +7,11 @@ import com.dennymathew.streamhub.user.dto.RegisterUserRequest;
 import com.dennymathew.streamhub.user.dto.UserResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.Locale;
+import java.util.UUID;
+import java.nio.charset.StandardCharsets;
+import org.springframework.security.authentication.BadCredentialsException;
 
 @Service
 class UserService {
@@ -28,15 +33,20 @@ class UserService {
         return "Hello Users";
     }
 
+    @Transactional
     public UserResponse createUser(RegisterUserRequest request) {
+        if (request.password().getBytes(StandardCharsets.UTF_8).length > 72) {
+            throw new IllegalArgumentException("Password must be at most 72 UTF-8 bytes");
+        }
+        String email = request.email().trim().toLowerCase(Locale.ROOT);
 
-        if (userRepository.existsByEmail(request.email())) {
+        if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email already registered");
         }
 
         User user = new User();
-        user.setName(request.name());
-        user.setEmail(request.email());
+        user.setName(request.name().trim());
+        user.setEmail(email);
 
         user.setPassword(
                 passwordEncoder.encode(request.password())
@@ -51,17 +61,27 @@ class UserService {
         );
     }
 
+    @Transactional
+    public LoginResponse createDemoSession() {
+        User user = new User();
+        user.setName("Demo explorer");
+        user.setEmail("demo-" + UUID.randomUUID() + "@streamhub.invalid");
+        user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+        userRepository.save(user);
+        return new LoginResponse(jwtService.generateToken(user.getEmail()));
+    }
+
     public LoginResponse login(LoginRequest request) {
 
-        User user = userRepository.findByEmail(request.email())
+        User user = userRepository.findByEmail(request.email().trim().toLowerCase(Locale.ROOT))
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Invalid email or password"));
+                        new BadCredentialsException("Invalid email or password"));
 
         if (!passwordEncoder.matches(
                 request.password(),
                 user.getPassword())) {
 
-            throw new IllegalArgumentException("Invalid email or password");
+            throw new BadCredentialsException("Invalid email or password");
         }
 
         String token = jwtService.generateToken(user.getEmail());

@@ -1,71 +1,53 @@
 package com.dennymathew.streamhub.history;
 
-import com.dennymathew.streamhub.catalog.Movie;
-import com.dennymathew.streamhub.catalog.MovieRepository;
-import com.dennymathew.streamhub.events.MovieWatchedEventProducer;
-import com.dennymathew.streamhub.history.dto.WatchHistoryResponse;
-import com.dennymathew.streamhub.user.User;
-import com.dennymathew.streamhub.user.UserRepository;
+import com.dennymathew.streamhub.catalog.CatalogClient;
+import com.dennymathew.streamhub.catalog.dto.MovieResponse;
+import com.dennymathew.streamhub.events.*;
+import com.dennymathew.streamhub.user.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
 import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class WatchHistoryServiceTest {
+    @Mock WatchHistoryRepository historyRepository;
+    @Mock UserRepository users;
+    @Mock CatalogClient catalog;
+    @Mock MovieWatchedOutboxRepository outbox;
+    @InjectMocks WatchHistoryService service;
 
-    @Mock
-    private WatchHistoryRepository watchHistoryRepository;
+    @Test void savesRemoteMovieProgressAndDurableEventTogether() {
+        User user = new User(); user.setId(10L);
+        when(users.findByEmail("demo@example.com")).thenReturn(Optional.of(user));
+        when(catalog.getMovie(20L)).thenReturn(new MovieResponse(20L,"Sintel","Open film","Fantasy",2010,15,null,null));
+        when(historyRepository.findByUserIdAndMovieId(10L,20L)).thenReturn(Optional.empty());
+        when(historyRepository.save(any())).thenAnswer(inv -> { WatchHistory row=inv.getArgument(0);row.setId(30L);return row; });
+        var result=service.saveProgressByEmail("demo@example.com",20L,120);
+        ArgumentCaptor<MovieWatchedOutbox> event=ArgumentCaptor.forClass(MovieWatchedOutbox.class);
+        verify(outbox).save(event.capture());
+        assertThat(result.movieId()).isEqualTo(20L);
+        assertThat(result.movieTitle()).isEqualTo("Sintel");
+        assertThat(event.getValue().event().watchedAt()).isEqualTo(result.lastWatchedAt());
+        assertThat(event.getValue().event().eventId()).isNotNull();
+        assertThat(event.getValue().getPublishedAt()).isNull();
+    }
 
-    @Mock
-    private UserRepository userRepository;
+    @Test void rejectsNegativeOrMissingProgressBeforeDatabaseAndNetworkWork() {
+        assertThatThrownBy(() -> service.saveProgressByEmail("x",1L,-1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.saveProgressByEmail("x",1L,null)).isInstanceOf(IllegalArgumentException.class);
+        verifyNoInteractions(users,catalog,historyRepository,outbox);
+    }
 
-    @Mock
-    private MovieRepository movieRepository;
-
-    @Mock
-    private MovieWatchedEventProducer movieWatchedEventProducer;
-
-    @InjectMocks
-    private WatchHistoryService watchHistoryService;
-
-    @Test
-    void saveProgressPublishesMovieWatchedEventAfterSavingHistory() {
-        User user = new User();
-        user.setId(10L);
-
-        Movie movie = new Movie();
-        movie.setId(20L);
-        movie.setTitle("Inception");
-
-        when(userRepository.findById(10L)).thenReturn(Optional.of(user));
-        when(movieRepository.findById(20L)).thenReturn(Optional.of(movie));
-        when(watchHistoryRepository.findByUserIdAndMovieId(10L, 20L)).thenReturn(Optional.empty());
-        when(watchHistoryRepository.save(org.mockito.ArgumentMatchers.any(WatchHistory.class)))
-                .thenAnswer(invocation -> {
-                    WatchHistory history = invocation.getArgument(0);
-                    history.setId(30L);
-                    return history;
-                });
-
-        WatchHistoryResponse response = watchHistoryService.saveProgress(10L, 20L, 120);
-
-        ArgumentCaptor<LocalDateTime> watchedAtCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
-        verify(movieWatchedEventProducer).publishMovieWatched(
-                org.mockito.ArgumentMatchers.eq(20L),
-                org.mockito.ArgumentMatchers.eq(10L),
-                watchedAtCaptor.capture()
-        );
-        assertThat(watchedAtCaptor.getValue()).isNotNull();
-        assertThat(response.lastWatchedAt()).isEqualTo(watchedAtCaptor.getValue());
+    @Test void rejectsProgressPastMovieDurationWithoutWritingHistory() {
+        User user = new User();user.setId(10L);
+        when(users.findByEmail("x")).thenReturn(Optional.of(user));
+        when(catalog.getMovie(20L)).thenReturn(new MovieResponse(20L,"Sintel","","Fantasy",2010,15,null,null));
+        assertThatThrownBy(() -> service.saveProgressByEmail("x",20L,901)).hasMessageContaining("duration");
+        verifyNoInteractions(historyRepository,outbox);
     }
 }

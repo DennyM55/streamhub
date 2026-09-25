@@ -7,14 +7,16 @@ import jakarta.validation.constraints.Size;
 public record RegisterUserRequest(
 
         @NotBlank(message = "Name is required")
+        @Size(max = 100)
         String name,
 
         @NotBlank(message = "Email is required")
         @Email(message = "Email must be valid")
+        @Size(max = 254)
         String email,
 
         @NotBlank(message = "Password is required")
-        @Size(min = 8, message = "Password must be at least 8 characters")
+        @Size(min = 8, max = 72, message = "Password must contain 8 to 72 characters")
         String password
 
 ) {
