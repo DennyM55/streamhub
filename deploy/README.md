@@ -64,6 +64,8 @@ Keep the administrative and catalogue keys out of frontend build variables. Brow
 
 The local Compose configuration uses Apache Kafka `4.0.2`, a single broker in KRaft mode, three partitions and replication factor one. The hosted free Aiven configuration uses its managed broker version, two partitions and broker-managed replication. The API must reach the advertised broker hostname, not just the bootstrap address.
 
+For hosted PostgreSQL, set `POSTGRES_CA_CERT` to its public CA PEM and use `?sslmode=verify-full&sslrootcert=/tmp/streamhub-postgres-ca.pem` in each JDBC URL. The container entrypoint writes the certificate with owner-only permissions before starting Java. This verifies both the CA and the database hostname.
+
 Keep Redis private. Externally hosted PostgreSQL and Kafka require authentication and TLS. The local single-broker demo has no broker redundancy.
 
 ## Verification after deployment
