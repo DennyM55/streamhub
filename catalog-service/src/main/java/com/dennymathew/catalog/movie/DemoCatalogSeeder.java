@@ -42,8 +42,8 @@ public class DemoCatalogSeeder implements ApplicationRunner {
         return List.of(
                 new SeedFilm("Big Buck Bunny", "A gentle rabbit faces three mischievous forest creatures. Playback is a preview clip; duration describes the full film.", "Animation", 2008, 10, "https://media.w3.org/2010/05/bunny/trailer.mp4"),
                 new SeedFilm("Sintel", "A young traveler searches for a dragon she once befriended. Playback is a preview clip; duration describes the full film.", "Fantasy", 2010, 15, "https://media.w3.org/2010/05/sintel/trailer.mp4"),
-                new SeedFilm("Tears of Steel", "A group confronts a robotic threat in a futuristic Amsterdam. Playback is a preview clip; duration describes the full film.", "Sci-Fi", 2012, 13, "https://developer.mozilla.org/shared-assets/videos/tears-of-steel-battle-clip-medium.mp4"),
-                new SeedFilm("Elephants Dream", "Two companions explore a vast and unsettling mechanical world.", "Sci-Fi", 2006, 11, "https://d2zihajmogu5jn.cloudfront.net/elephantsdream/ed_hd.mp4"),
+                new SeedFilm("Tears of Steel", "A group confronts a robotic threat in a futuristic Amsterdam. Playback is a preview clip; duration describes the full film.", "Sci-Fi", 2012, 13, "https://iandevlin.github.io/mdn/video-player/video/tears-of-steel-battle-clip-medium.mp4"),
+                new SeedFilm("Elephants Dream", "Two companions explore a vast and unsettling mechanical world. Playback is a preview clip; duration describes the full film.", "Sci-Fi", 2006, 11, "/media/elephants-dream-preview.mp4"),
                 new SeedFilm("Cosmos Laundromat", "A sheep on a remote island is offered an extraordinary escape.", "Fantasy", 2015, 12, null),
                 new SeedFilm("Spring", "A shepherd and her dog venture into a forest to awaken spring.", "Fantasy", 2019, 8, null),
                 new SeedFilm("Agent 327: Operation Barbershop", "An agent follows a lead into a barbershop with a dangerous secret.", "Action", 2017, 4, null),
