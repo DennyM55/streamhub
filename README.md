@@ -2,7 +2,7 @@
 
 A Java 21 / Spring Boot media-platform demonstration with a React frontend, a separate catalogue service, PostgreSQL persistence, Redis caching and Kafka watch events.
 
-**Deployment status:** source and automated tests are being verified for the public demo. A live URL will be added here only after the hosted user flows have passed verification.
+**Deployment status:** implementation and Docker integration checks pass in [GitHub Actions](https://github.com/DennyM55/streamhub/actions/runs/36125821385). Public hosting is pending account setup. A live URL will be added here only after the hosted user flows pass verification. See the [verification record](deploy/VERIFICATION.md).
 
 ## Try it locally
 
